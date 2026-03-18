@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OVP Vizsgaportál</title>
+<title>KompetenciaKapu</title>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -532,7 +532,11 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
         <div class="panel">
           <div class="panel-head" style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap">
             <h3 data-i18n="registered_examinees">Regisztrált vizsgázók</h3>
-            <select id="examinees-filter-exam" style="padding:.35rem .65rem;border:1px solid var(--rule);border-radius:var(--r);font-size:.83rem" onchange="loadExaminees()"></select>
+            <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+              <select id="examinees-filter-exam" style="padding:.35rem .65rem;border:1px solid var(--rule);border-radius:var(--r);font-size:.83rem" onchange="loadExaminees()"></select>
+              <button class="btn btn-secondary btn-sm" onclick="exportExamineesExcel()">⬇ Excel</button>
+              <button class="btn btn-secondary btn-sm" onclick="exportExamineesPDF()">⬇ PDF</button>
+            </div>
           </div>
           <div style="overflow-x:auto;max-height:400px;overflow-y:auto">
             <table class="data-table"><thead><tr><th data-i18n="examinee_id">Azonosító</th><th data-i18n="th_status">Állapot</th><th></th></tr></thead><tbody id="examinees-body"></tbody></table>
@@ -1524,6 +1528,109 @@ async function deleteTask(taskId) {
     await apiDelete(`/api/admin/tasks?id=${taskId}`);
     await refreshAdminData();
   } catch(e) { alert(e.message); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  EXAMINEE EXPORT
+// ═══════════════════════════════════════════════════════════════
+async function getExamineesForExport() {
+  const sel = document.getElementById('examinees-filter-exam');
+  const examCode = sel?.value || '';
+  if (!examCode) { alert('Kérjük, válasszon vizsgát az exportálás előtt.'); return null; }
+
+  const data = await apiGet(`/api/admin/examinees?examCode=${examCode}`);
+  const examinees = Array.isArray(data.examinees) ? data.examinees : [];
+  const results = await apiGet(`/api/admin/results?examCode=${examCode}`).catch(() => []);
+  const resultMap = {};
+  (Array.isArray(results) ? results : []).forEach(r => resultMap[r.examineeId] = r);
+
+  return examinees.map(eid => ({
+    examineeId: eid,
+    examCode,
+    status: resultMap[eid]
+      ? (resultMap[eid].released ? 'Közzétett' : 'Beadva – függőben')
+      : 'Nem adta be',
+  }));
+}
+
+async function exportExamineesExcel() {
+  const rows = await getExamineesForExport();
+  if (!rows) return;
+  if (!rows.length) { alert('Nincsenek vizsgázók ehhez a vizsgához.'); return; }
+
+  if (typeof XLSX === 'undefined') {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    document.head.appendChild(s);
+    await new Promise(res => s.onload = res);
+  }
+
+  const examCode = document.getElementById('examinees-filter-exam').value;
+  const sheetRows = rows.map(r => ({
+    'Vizsgakód':           r.examCode,
+    'Vizsgázói azonosító': r.examineeId,
+    'Állapot':             r.status,
+  }));
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(sheetRows);
+  ws['!cols'] = [18, 24, 22].map(w => ({ wch: w }));
+  XLSX.utils.book_append_sheet(wb, ws, 'Vizsgázók');
+  XLSX.writeFile(wb, `obscuron-vizsgazok-${examCode}-${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+async function exportExamineesPDF() {
+  const rows = await getExamineesForExport();
+  if (!rows) return;
+  if (!rows.length) { alert('Nincsenek vizsgázók ehhez a vizsgához.'); return; }
+
+  if (typeof window.jspdf === 'undefined') {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    document.head.appendChild(s);
+    await new Promise(res => s.onload = res);
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const examCode = document.getElementById('examinees-filter-exam').value;
+  const exam = cachedExams.find(e => e.code === examCode);
+
+  doc.setLanguage('hu');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.text('Obscuron Vizsgaportal - Vizsgazoi Lista', 14, 16);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.text(`Vizsga: ${examCode}${exam ? ' - ' + exam.title : ''}`, 14, 23);
+  doc.text(`Exportalva: ${new Date().toLocaleString()}`, 14, 28);
+
+  const headers = ['Vizsgakod', 'Vizsgazoi azonosito', 'Allapot'];
+  const colX = [14, 50, 120];
+
+  let y = 38;
+  doc.setFillColor(27, 79, 138);
+  doc.rect(14, y - 5, 182, 8, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  headers.forEach((h, i) => doc.text(h, colX[i] + 1, y));
+
+  doc.setFont('helvetica', 'normal');
+  rows.forEach((r, idx) => {
+    y += 8;
+    if (y > 270) { doc.addPage(); y = 20; }
+    doc.setFillColor(idx % 2 === 0 ? 240 : 255, idx % 2 === 0 ? 244 : 255, idx % 2 === 0 ? 250 : 255);
+    doc.rect(14, y - 5, 182, 8, 'F');
+    doc.setTextColor(30, 30, 30);
+    [r.examCode, r.examineeId, r.status].forEach((cell, i) => doc.text(String(cell), colX[i] + 1, y));
+  });
+
+  doc.setFontSize(7);
+  doc.setTextColor(150);
+  doc.text(`${rows.length} vizsgazo`, 14, y + 10);
+
+  doc.save(`obscuron-vizsgazok-${examCode}-${new Date().toISOString().slice(0,10)}.pdf`);
 }
 
 // ═══════════════════════════════════════════════════════════════

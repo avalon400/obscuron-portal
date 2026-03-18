@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KompetenciaKapu</title>
+<title>OVP Vizsgaportál</title>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -185,7 +185,7 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
 <div class="site-header">
   <div class="site-logo">
     <div class="crest">OVP</div>
-    <span data-i18n="site_title">OVP Vizsgaportál</span>
+    <span data-i18n="site_title">Obscuron Vizsgaportál</span>
   </div>
   <div class="header-right">
     <div class="header-meta" id="header-meta"></div>
@@ -1363,52 +1363,123 @@ function viewEditTask(taskId) {
 
   const typeLabels = { mc: 'Feleletválasztós', text: 'Rövid válasz', order: 'Sorbarendezés', match: 'Párosítás' };
 
-  let answerHtml = '';
-  if (tk.type === 'mc') {
-    answerHtml = tk.options.map((opt, i) =>
-      `<div style="padding:.3rem 0;display:flex;align-items:center;gap:.5rem">
-        <input type="radio" name="edit-mc" value="${i}" id="edit-opt-${i}" ${i === tk.correctIdx ? 'checked' : ''}>
-        <input type="text" value="${opt.replace(/"/g,'&quot;')}" id="edit-opt-text-${i}" style="flex:1;padding:.3rem .5rem;border:1px solid var(--rule);border-radius:var(--r);font-size:.85rem">
-        <label for="edit-opt-${i}" style="font-size:.8rem;color:var(--muted)">${i === tk.correctIdx ? '✓ Helyes' : ''}</label>
-      </div>`
-    ).join('');
-  } else if (tk.type === 'text') {
-    answerHtml = `<div class="field"><label>Kulcsszavak (vesszővel elválasztva)</label><input type="text" id="edit-keywords" value="${tk.keywords.join(', ')}" style="width:100%;padding:.4rem .6rem;border:1px solid var(--rule);border-radius:var(--r)"></div>`;
-  } else if (tk.type === 'order') {
-    answerHtml = `<div class="field"><label>Helyes sorrend (soronként egy)</label><textarea id="edit-order-items" rows="4" style="width:100%;padding:.4rem .6rem;border:1px solid var(--rule);border-radius:var(--r)">${tk.items.join('\n')}</textarea></div>`;
-  } else if (tk.type === 'match') {
-    answerHtml = `<div class="field"><label>Párok (Bal | Jobb, soronként egy)</label><textarea id="edit-match-pairs" rows="4" style="width:100%;padding:.4rem .6rem;border:1px solid var(--rule);border-radius:var(--r)">${tk.pairs.map(([l,r])=>l+' | '+r).join('\n')}</textarea></div>`;
-  }
-
+  // Build modal shell
   const modal = document.createElement('div');
   modal.id = 'task-edit-modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem';
-  modal.innerHTML = `
-    <div style="background:var(--white);border-radius:var(--r);width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18)">
-      <div style="padding:1.2rem 1.5rem;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center">
-        <h3 style="margin:0;font-size:1rem">Feladat szerkesztése</h3>
-        <button onclick="document.getElementById('task-edit-modal').remove()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--muted)">✕</button>
-      </div>
-      <div style="padding:1.2rem 1.5rem">
-        <div class="field">
-          <label>Kérdés szövege</label>
-          <textarea id="edit-task-text" rows="3" style="width:100%;padding:.4rem .6rem;border:1px solid var(--rule);border-radius:var(--r)">${tk.text}</textarea>
-        </div>
-        <div class="field" style="display:flex;gap:1rem">
-          <div style="flex:1"><label>Típus</label><div style="padding:.4rem 0;font-weight:600">${typeLabels[tk.type]||tk.type}</div></div>
-          <div style="flex:1"><label>Nehézség (1–7)</label><input type="number" id="edit-task-diff" min="1" max="7" value="${tk.difficulty}" style="width:100%;padding:.4rem .6rem;border:1px solid var(--rule);border-radius:var(--r)"></div>
-        </div>
-        <div class="field">
-          <label>Válasz${tk.type==='mc'?' (jelölje meg a helyeset)':''}</label>
-          ${answerHtml}
-        </div>
-        <div id="edit-task-err" class="alert alert-danger" style="display:none;margin-top:.5rem"></div>
-      </div>
-      <div style="padding:1rem 1.5rem;border-top:1px solid var(--rule);display:flex;justify-content:flex-end;gap:.5rem">
-        <button class="btn btn-secondary" onclick="document.getElementById('task-edit-modal').remove()">Mégse</button>
-        <button class="btn btn-primary" onclick="saveEditTask('${taskId}','${tk.type}')">Mentés</button>
-      </div>
+
+  const box = document.createElement('div');
+  box.style.cssText = 'background:var(--white);border-radius:var(--r);width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18)';
+
+  // Header
+  box.innerHTML = `
+    <div style="padding:1.2rem 1.5rem;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center">
+      <h3 style="margin:0;font-size:1rem">Feladat szerkesztése</h3>
+      <button onclick="document.getElementById('task-edit-modal').remove()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--muted)">✕</button>
     </div>`;
+
+  // Body
+  const body = document.createElement('div');
+  body.style.cssText = 'padding:1.2rem 1.5rem';
+
+  // Question text
+  const textArea = document.createElement('textarea');
+  textArea.id = 'edit-task-text';
+  textArea.rows = 3;
+  textArea.style.cssText = 'width:100%;padding:.4rem .6rem;border:1px solid var(--rule);border-radius:var(--r)';
+  textArea.value = tk.text;
+  const textField = document.createElement('div');
+  textField.className = 'field';
+  textField.innerHTML = '<label>Kérdés szövege</label>';
+  textField.appendChild(textArea);
+  body.appendChild(textField);
+
+  // Type + difficulty row
+  const metaRow = document.createElement('div');
+  metaRow.className = 'field';
+  metaRow.style.display = 'flex';
+  metaRow.style.gap = '1rem';
+  const diffInput = document.createElement('input');
+  diffInput.type = 'number'; diffInput.id = 'edit-task-diff';
+  diffInput.min = 1; diffInput.max = 7; diffInput.value = tk.difficulty;
+  diffInput.style.cssText = 'width:100%;padding:.4rem .6rem;border:1px solid var(--rule);border-radius:var(--r)';
+  metaRow.innerHTML = `<div style="flex:1"><label>Típus</label><div style="padding:.4rem 0;font-weight:600">${typeLabels[tk.type]||tk.type}</div></div><div style="flex:1"><label>Nehézség (1–7)</label></div>`;
+  metaRow.querySelector('div:last-child').appendChild(diffInput);
+  body.appendChild(metaRow);
+
+  // Answer section
+  const ansField = document.createElement('div');
+  ansField.className = 'field';
+  ansField.innerHTML = `<label>Válasz${tk.type==='mc'?' (jelölje meg a helyeset)':''}</label>`;
+
+  if (tk.type === 'mc') {
+    tk.options.forEach((opt, i) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'padding:.3rem 0;display:flex;align-items:center;gap:.5rem';
+      const radio = document.createElement('input');
+      radio.type = 'radio'; radio.name = 'edit-mc'; radio.value = i;
+      radio.id = `edit-opt-${i}`;
+      if (i === tk.correctIdx) radio.checked = true;
+      const inp = document.createElement('input');
+      inp.type = 'text'; inp.id = `edit-opt-text-${i}`;
+      inp.style.cssText = 'flex:1;padding:.3rem .5rem;border:1px solid var(--rule);border-radius:var(--r);font-size:.85rem';
+      inp.value = opt;
+      const lbl = document.createElement('label');
+      lbl.htmlFor = `edit-opt-${i}`;
+      lbl.style.cssText = 'font-size:.8rem;color:var(--muted);min-width:3rem';
+      lbl.textContent = i === tk.correctIdx ? '✓ Helyes' : '';
+      radio.addEventListener('change', () => {
+        document.querySelectorAll('[id^=edit-opt-]').forEach(el => {
+          if (el.tagName === 'LABEL') el.textContent = '';
+        });
+        lbl.textContent = '✓ Helyes';
+      });
+      row.appendChild(radio); row.appendChild(inp); row.appendChild(lbl);
+      ansField.appendChild(row);
+    });
+  } else if (tk.type === 'text') {
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.id = 'edit-keywords';
+    inp.style.cssText = 'width:100%;padding:.4rem .6rem;border:1px solid var(--rule);border-radius:var(--r)';
+    inp.value = tk.keywords.join(', ');
+    ansField.appendChild(inp);
+  } else if (tk.type === 'order') {
+    const ta = document.createElement('textarea');
+    ta.id = 'edit-order-items'; ta.rows = 4;
+    ta.style.cssText = 'width:100%;padding:.4rem .6rem;border:1px solid var(--rule);border-radius:var(--r)';
+    ta.value = tk.items.join('\n');
+    ansField.appendChild(ta);
+  } else if (tk.type === 'match') {
+    const ta = document.createElement('textarea');
+    ta.id = 'edit-match-pairs'; ta.rows = 4;
+    ta.style.cssText = 'width:100%;padding:.4rem .6rem;border:1px solid var(--rule);border-radius:var(--r)';
+    ta.value = tk.pairs.map(([l,r])=>l+' | '+r).join('\n');
+    ansField.appendChild(ta);
+  }
+
+  body.appendChild(ansField);
+
+  const errEl = document.createElement('div');
+  errEl.id = 'edit-task-err';
+  errEl.className = 'alert alert-danger';
+  errEl.style.display = 'none';
+  errEl.style.marginTop = '.5rem';
+  body.appendChild(errEl);
+
+  box.appendChild(body);
+
+  // Footer
+  const footer = document.createElement('div');
+  footer.style.cssText = 'padding:1rem 1.5rem;border-top:1px solid var(--rule);display:flex;justify-content:flex-end;gap:.5rem';
+  footer.innerHTML = `<button class="btn btn-secondary" onclick="document.getElementById('task-edit-modal').remove()">Mégse</button>`;
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'btn btn-primary';
+  saveBtn.textContent = 'Mentés';
+  saveBtn.onclick = () => saveEditTask(taskId, tk.type);
+  footer.appendChild(saveBtn);
+  box.appendChild(footer);
+
+  modal.appendChild(box);
   document.body.appendChild(modal);
 }
 

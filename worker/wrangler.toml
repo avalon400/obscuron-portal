@@ -1,0 +1,23 @@
+name            = "competencegate"
+main            = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# ── KV Namespace ──────────────────────────────────────────────────────────────
+# After running `wrangler kv:namespace create CG_KV` replace the id below.
+[[kv_namespaces]]
+binding  = "CG_KV"
+id       = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+# For local dev (`wrangler dev`) create a preview namespace too:
+# preview_id = "REPLACE_WITH_YOUR_PREVIEW_KV_NAMESPACE_ID"
+
+# ── Routes ────────────────────────────────────────────────────────────────────
+# The Worker handles /api/* paths.
+# The static frontend is served by Cloudflare Pages (or any static host).
+# If you want a single Worker-only deploy (no Pages), remove this and
+# serve the HTML from the Worker itself.
+[env.production]
+name = "competencegate-prod"
+
+# ── Secrets (set via CLI, not stored here) ────────────────────────────────────
+# wrangler secret put ADMIN_PASSWORD
+# Never put your actual password in this file.

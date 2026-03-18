@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KompetenciaKapu</title>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --white:#ffffff;--off:#f5f4f1;--rule:#d8d4cc;--muted:#8a8680;
+  --ink:#1c1a17;--mid:#4a4740;--accent:#1b4f8a;--accent-l:#e8eef6;
+  --success:#1a6b3a;--success-l:#e6f2eb;--danger:#8b2020;--danger-l:#f5e8e8;
+  --warn:#7a5400;--warn-l:#fdf3dc;--r:4px;--sh:0 1px 4px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.06);
+}
+html{font-size:15px}
+body{font-family:'Source Sans 3',sans-serif;background:var(--off);color:var(--ink);min-height:100vh;line-height:1.55}
+
+/* HEADER */
+.site-header{background:var(--accent);color:#fff;padding:.6rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.site-logo{font-family:'EB Garamond',serif;font-size:1.1rem;font-weight:500;display:flex;align-items:center;gap:.6rem}
+.site-logo .crest{width:28px;height:28px;border:2px solid rgba(255,255,255,.45);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0}
+.header-right{display:flex;align-items:center;gap:.75rem}
+.header-meta{font-size:.78rem;opacity:.65}
+.lang-switcher{display:flex;gap:0;border:1px solid rgba(255,255,255,.3);border-radius:var(--r);overflow:hidden}
+.lang-btn{background:transparent;border:none;color:rgba(255,255,255,.6);font-family:'Source Sans 3',sans-serif;font-size:.78rem;font-weight:600;padding:.25rem .6rem;cursor:pointer;transition:all .15s}
+.lang-btn.active{background:rgba(255,255,255,.18);color:#fff}
+.lang-btn:hover:not(.active){color:#fff}
+
+/* SCREENS */
+.screen{display:none}.screen.active{display:block}
+#screen-welcome.active,#screen-admin-login.active{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 44px)}
+
+/* PAGE CONTAINERS */
+.page{max-width:660px;margin:3rem auto;padding:0 1rem;animation:appear .2s ease}
+.page-wide{max-width:1080px;margin:2.5rem auto;padding:0 1rem;animation:appear .2s ease}
+@keyframes appear{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* PANEL */
+.panel{background:var(--white);border:1px solid var(--rule);border-radius:var(--r);box-shadow:var(--sh)}
+.panel-head{border-bottom:1px solid var(--rule);padding:1.3rem 1.8rem}
+.panel-body{padding:1.8rem}
+.panel-foot{border-top:1px solid var(--rule);padding:1.1rem 1.8rem;background:var(--off);display:flex;gap:.6rem;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+
+/* TYPOGRAPHY */
+h1,h2,h3,h4{font-family:'EB Garamond',serif;font-weight:500;line-height:1.25}
+h1{font-size:2rem}h2{font-size:1.55rem}h3{font-size:1.2rem}
+.subtitle{color:var(--muted);font-size:.9rem;margin-top:.3rem}
+.label-tag{display:inline-block;background:var(--accent-l);color:var(--accent);border:1px solid #c5d5e8;border-radius:2px;font-size:.72rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;padding:.15rem .5rem}
+
+/* FORM */
+.field{margin-bottom:1.15rem}
+.field label{display:block;font-size:.8rem;font-weight:600;color:var(--mid);margin-bottom:.32rem;letter-spacing:.02em;text-transform:uppercase}
+.field input,.field select,.field textarea{width:100%;background:var(--white);border:1px solid var(--rule);border-radius:var(--r);padding:.58rem .82rem;font-family:'Source Sans 3',sans-serif;font-size:.92rem;color:var(--ink);outline:none;transition:border-color .15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.field input.mono{font-family:'Courier New',monospace;letter-spacing:.06em}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.field-hint{font-size:.76rem;color:var(--muted);margin-top:.28rem}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:.4rem;font-family:'Source Sans 3',sans-serif;font-size:.87rem;font-weight:600;padding:.52rem 1.25rem;border-radius:var(--r);border:1px solid transparent;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:#163f70;border-color:#163f70}
+.btn-secondary{background:var(--white);color:var(--ink);border-color:var(--rule)}
+.btn-secondary:hover{border-color:var(--muted)}
+.btn-success{background:var(--success);color:#fff;border-color:var(--success)}
+.btn-success:hover{background:#155230}
+.btn-danger{background:var(--danger);color:#fff;border-color:var(--danger)}
+.btn-sm{padding:.33rem .8rem;font-size:.78rem}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* ALERTS */
+.alert{padding:.7rem .95rem;border-radius:var(--r);font-size:.87rem;display:flex;gap:.55rem;align-items:flex-start}
+.alert-info{background:var(--accent-l);border:1px solid #c5d5e8;color:var(--accent)}
+.alert-warn{background:var(--warn-l);border:1px solid #e8d48a;color:var(--warn)}
+.alert-success{background:var(--success-l);border:1px solid #9dcfb0;color:var(--success)}
+.alert-danger{background:var(--danger-l);border:1px solid #d4a0a0;color:var(--danger)}
+.divider{border:none;border-top:1px solid var(--rule);margin:1.4rem 0}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;font-size:.87rem}
+.data-table th{text-align:left;padding:.5rem .8rem;border-bottom:2px solid var(--rule);font-size:.73rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.data-table td{padding:.58rem .8rem;border-bottom:1px solid var(--off);vertical-align:middle}
+.data-table tbody tr:last-child td{border-bottom:none}
+.data-table tbody tr:hover td{background:var(--off)}
+
+/* BADGES */
+.badge{display:inline-block;padding:.17rem .55rem;border-radius:2px;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.badge-blue{background:var(--accent-l);color:var(--accent)}
+.badge-green{background:var(--success-l);color:var(--success)}
+.badge-red{background:var(--danger-l);color:var(--danger)}
+.badge-yellow{background:var(--warn-l);color:var(--warn)}
+.badge-grey{background:#eee;color:var(--muted)}
+
+/* ADMIN TABS */
+.tab-bar{display:flex;border-bottom:2px solid var(--rule);margin-bottom:1.5rem;overflow-x:auto}
+.tab-btn{background:none;border:none;padding:.7rem 1.25rem;font-family:'Source Sans 3',sans-serif;font-size:.87rem;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:color .15s}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-btn:hover:not(.active){color:var(--ink)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* EXAM ENGINE */
+#screen-exam.active{display:flex;flex-direction:column;min-height:calc(100vh - 44px)}
+.exam-bar{background:var(--white);border-bottom:1px solid var(--rule);padding:.65rem 1.5rem;display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap;position:sticky;top:0;z-index:20}
+.exam-bar-title{font-family:'EB Garamond',serif;font-size:1rem;flex:1;min-width:120px}
+.prog-wrap{flex:2;min-width:150px}
+.prog-meta{display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);margin-bottom:.28rem}
+.prog-track{height:4px;background:var(--off);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s}
+.timer-box{font-family:'Courier New',monospace;font-size:.92rem;font-weight:600;padding:.28rem .65rem;border:1px solid var(--rule);border-radius:var(--r);min-width:68px;text-align:center;transition:color .3s,border-color .3s}
+.timer-box.urgent{color:var(--danger);border-color:var(--danger)}
+
+.exam-content{flex:1;padding:2.5rem 1rem}
+.q-wrap{max-width:640px;margin:0 auto}
+.q-label{font-size:.7rem;font-weight:600;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.7rem}
+.q-text{font-family:'EB Garamond',serif;font-size:1.2rem;line-height:1.6;margin-bottom:.7rem}
+.q-diff{font-size:.75rem;color:var(--muted);margin-bottom:1.5rem;display:flex;align-items:center;gap:.35rem}
+.q-diff-pip{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+
+/* Options */
+.options{display:flex;flex-direction:column;gap:.5rem}
+.opt{display:flex;align-items:center;gap:.85rem;padding:.7rem .95rem;border:1px solid var(--rule);border-radius:var(--r);cursor:pointer;transition:all .15s;background:var(--white);font-size:.92rem;color:var(--ink)}
+.opt:hover{border-color:var(--accent);background:var(--accent-l)}
+.opt.selected{border-color:var(--accent);background:var(--accent-l)}
+.opt-letter{width:24px;height:24px;border-radius:2px;flex-shrink:0;border:1px solid var(--rule);background:var(--off);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:var(--mid);transition:all .15s}
+.opt.selected .opt-letter{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* Match table */
+.match-tbl{width:100%;border-collapse:collapse}
+.match-tbl td{padding:.42rem .35rem;vertical-align:middle}
+.match-left{font-size:.9rem;padding-right:.85rem !important;width:44%}
+.match-sel select{width:100%;padding:.48rem .65rem;border:1px solid var(--rule);border-radius:var(--r);font-size:.87rem;background:var(--white)}
+
+/* Order */
+.order-list{display:flex;flex-direction:column;gap:.42rem}
+.order-item{display:flex;align-items:center;gap:.8rem;padding:.65rem .88rem;border:1px solid var(--rule);border-radius:var(--r);background:var(--white);cursor:grab;transition:border-color .15s;font-size:.9rem}
+.order-item:hover{border-color:var(--accent)}
+.order-item.dragging{opacity:.35}
+.order-handle{color:var(--rule);cursor:grab}
+.order-num{width:20px;height:20px;border-radius:2px;background:var(--off);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:var(--muted);flex-shrink:0}
+
+/* Exam foot */
+.exam-foot{background:var(--white);border-top:1px solid var(--rule);padding:.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;position:sticky;bottom:0;z-index:20}
+.q-dots{display:flex;flex-wrap:wrap;gap:.28rem}
+.q-dot{width:22px;height:22px;border:1px solid var(--rule);border-radius:2px;cursor:pointer;font-size:.68rem;font-weight:600;color:var(--muted);display:flex;align-items:center;justify-content:center;background:var(--white);transition:all .12s}
+.q-dot.answered{background:var(--accent-l);border-color:var(--accent);color:var(--accent)}
+.q-dot.current{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* Score */
+.score-block{display:flex;align-items:flex-start;gap:2rem;flex-wrap:wrap;margin-bottom:1.75rem;padding-bottom:1.5rem;border-bottom:1px solid var(--rule)}
+.score-pts{font-family:'EB Garamond',serif;font-size:3.2rem;font-weight:500;line-height:1}
+.score-pts-lbl{font-size:.72rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.band-bar{height:14px;border-radius:2px;background:var(--off);border:1px solid var(--rule);overflow:hidden;margin-top:.4rem}
+.band-fill{height:100%;background:var(--accent);transition:width 1s ease}
+.score-grade{font-family:'EB Garamond',serif;font-size:1.7rem;margin-bottom:.4rem}
+.score-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin-top:.9rem}
+.score-stat{background:var(--off);border:1px solid var(--rule);border-radius:var(--r);padding:.7rem;text-align:center}
+.score-stat-num{font-family:'EB Garamond',serif;font-size:1.5rem}
+.score-stat-lbl{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+
+/* Spinner */
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--rule);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Welcome */
+.welcome-inner{text-align:center;max-width:500px;padding:2rem}
+.welcome-icon{font-size:2.2rem;margin-bottom:1.2rem}
+.welcome-actions{display:flex;gap:.65rem;justify-content:center;margin-top:1.75rem;flex-wrap:wrap}
+
+/* Admin two-col */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start}
+@media(max-width:700px){.two-col{grid-template-columns:1fr}.field-row{grid-template-columns:1fr}.score-stats{grid-template-columns:1fr 1fr}.panel-body{padding:1.2rem}.panel-head{padding:1rem 1.2rem}.panel-foot{padding:.9rem 1.2rem}.exam-bar,.exam-foot{padding:.6rem 1rem}}
+
+/* MC builder */
+.mc-opt-row{display:flex;gap:.5rem;align-items:center;margin-bottom:.38rem}
+.mc-opt-row input[type=text]{flex:1;padding:.48rem .7rem;border:1px solid var(--rule);border-radius:var(--r);font-size:.87rem}
+.mc-opt-row label{display:flex;align-items:center;gap:.28rem;font-size:.78rem;white-space:nowrap;cursor:pointer}
+
+code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);padding:.1em .35em;border-radius:2px;border:1px solid var(--rule)}
+</style>
+</head>
+<body>
+
+<!-- ═══ SITE HEADER ═══ -->
+<div class="site-header">
+  <div class="site-logo">
+    <div class="crest">CG</div>
+    <span data-i18n="site_title">KompetenciaKapu — Vizsgáztató Rendszer</span>
+  </div>
+  <div class="header-right">
+    <div class="header-meta" id="header-meta"></div>
+    <div class="lang-switcher">
+      <button class="lang-btn active" onclick="setLang('hu')" id="lang-hu">HU</button>
+      <button class="lang-btn" onclick="setLang('en')" id="lang-en">EN</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ WELCOME ═══════════ -->
+<div id="screen-welcome" class="screen active">
+  <div class="welcome-inner">
+    <div class="welcome-icon">🎓</div>
+    <h1 data-i18n="welcome_title">KompetenciaKapu</h1>
+    <p class="subtitle" style="font-size:.95rem;margin-top:.4rem" data-i18n="welcome_sub">Hivatalos Kompetencia Vizsgáztató Platform</p>
+    <p style="color:var(--muted);margin-top:1rem;font-size:.9rem;line-height:1.6" data-i18n="welcome_desc">Adja meg vizsgaazonosítóját a vizsga megkezdéséhez, vagy lépjen be az adminisztrátori felületre.</p>
+    <div class="welcome-actions">
+      <button class="btn btn-primary" onclick="go('login')" data-i18n="btn_start_exam">Vizsga megkezdése</button>
+      <button class="btn btn-secondary" onclick="go('result-lookup')" data-i18n="btn_view_result">Eredmény megtekintése</button>
+      <button class="btn btn-secondary" onclick="go('admin-login')" data-i18n="btn_admin">Adminisztrátor</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ EXAMINEE LOGIN ═══════════ -->
+<div id="screen-login" class="screen">
+  <div class="page">
+    <div class="panel">
+      <div class="panel-head">
+        <h2 data-i18n="login_title">Vizsgázó azonosítása</h2>
+        <p class="subtitle" data-i18n="login_sub">Adja meg intézménye által kiadott vizsgakódot és vizsgázói azonosítót.</p>
+      </div>
+      <div class="panel-body">
+        <div class="alert alert-info" style="margin-bottom:1.4rem">
+          <span>ℹ️</span><span data-i18n="login_info">Az azonosítókat a vizsgáztató intézmény bocsátja ki. Probléma esetén forduljon a felügyelőhöz.</span>
+        </div>
+        <div class="field">
+          <label data-i18n="exam_code">Vizsgakód</label>
+          <input id="login-code" type="text" class="mono" placeholder="pl. VIZSGA-2025-001" maxlength="24" oninput="this.value=this.value.toUpperCase()">
+          <div class="field-hint" data-i18n="exam_code_hint">A vizsgáztatói kör által kiadott egyedi kód.</div>
+        </div>
+        <div class="field">
+          <label data-i18n="examinee_id">Vizsgázói azonosító</label>
+          <input id="login-eid" type="text" class="mono" placeholder="pl. VZ-00042" maxlength="14" oninput="this.value=this.value.toUpperCase()">
+          <div class="field-hint" data-i18n="examinee_id_hint">Az intézmény által kiadott személyes azonosító.</div>
+        </div>
+        <div id="login-err" class="alert alert-danger" style="display:none;margin-top:.6rem"></div>
+      </div>
+      <div class="panel-foot">
+        <button class="btn btn-secondary" onclick="go('welcome')" data-i18n="btn_back">← Vissza</button>
+        <button class="btn btn-primary" onclick="doLogin()" id="login-btn" data-i18n="btn_verify">Ellenőrzés és folytatás →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ INSTRUCTIONS ═══════════ -->
+<div id="screen-instructions" class="screen">
+  <div class="page">
+    <div class="panel">
+      <div class="panel-head">
+        <div style="display:flex;align-items:center;gap:.65rem;flex-wrap:wrap">
+          <span class="label-tag" id="instr-cat">—</span>
+          <h2 id="instr-title">—</h2>
+        </div>
+        <p class="subtitle" id="instr-desc"></p>
+      </div>
+      <div class="panel-body">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.65rem;margin-bottom:1.4rem">
+          <div class="score-stat"><div class="score-stat-num" id="instr-qcount">—</div><div class="score-stat-lbl" data-i18n="questions">Kérdések</div></div>
+          <div class="score-stat"><div class="score-stat-num" id="instr-time">—</div><div class="score-stat-lbl" data-i18n="minutes">Perc</div></div>
+          <div class="score-stat"><div class="score-stat-num">2500</div><div class="score-stat-lbl" data-i18n="max_points">Max. pont</div></div>
+        </div>
+        <hr class="divider">
+        <h3 style="margin-bottom:.8rem" data-i18n="instructions_heading">Útmutató</h3>
+        <ul id="instr-list" style="padding-left:1.2rem;display:flex;flex-direction:column;gap:.55rem;font-size:.9rem;color:var(--mid)"></ul>
+        <div class="alert alert-warn" style="margin-top:1.4rem">
+          <span>⚠️</span><span data-i18n="instr_warn">Ne zárja be és ne frissítse az oldalt a vizsga közben. Az előrehaladás nem állítható vissza.</span>
+        </div>
+      </div>
+      <div class="panel-foot">
+        <button class="btn btn-secondary" onclick="go('login')" data-i18n="btn_back">← Vissza</button>
+        <button class="btn btn-primary" onclick="beginExam()" data-i18n="btn_begin">Vizsga megkezdése →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ EXAM ENGINE ═══════════ -->
+<div id="screen-exam" class="screen">
+  <div class="exam-bar">
+    <div class="exam-bar-title" id="exam-bar-title">—</div>
+    <div class="prog-wrap">
+      <div class="prog-meta"><span id="prog-label">1 / 10</span><span id="prog-pct">0%</span></div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+    </div>
+    <div class="timer-box" id="timer-box">00:00</div>
+    <button class="btn btn-secondary btn-sm" onclick="confirmSubmit()" data-i18n="btn_submit">Beadás</button>
+  </div>
+  <div class="exam-content">
+    <div class="q-wrap">
+      <div class="q-label" id="q-label"></div>
+      <div class="q-text" id="q-text"></div>
+      <div class="q-diff" id="q-diff"></div>
+      <div id="q-area"></div>
+    </div>
+  </div>
+  <div class="exam-foot">
+    <div class="q-dots" id="q-dots"></div>
+    <div style="display:flex;gap:.45rem">
+      <button class="btn btn-secondary btn-sm" id="btn-prev" onclick="prevQ()" data-i18n="btn_prev">← Előző</button>
+      <button class="btn btn-primary btn-sm" id="btn-next" onclick="nextQ()" data-i18n="btn_next">Következő →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ SUBMITTED (locked) ═══════════ -->
+<div id="screen-submitted" class="screen">
+  <div class="page">
+    <div class="panel">
+      <div class="panel-body" style="text-align:center;padding:3rem 2rem">
+        <div style="font-size:2.2rem;margin-bottom:1rem">🔒</div>
+        <h2 data-i18n="submitted_title">Vizsga beadva</h2>
+        <p style="color:var(--muted);max-width:380px;margin:.8rem auto;font-size:.9rem" data-i18n="submitted_msg">Válaszai rögzítve lettek. Az eredményeket az adminisztrátor teszi közzé. Amint elérhetővé válnak, az alábbi azonosítóval tekintheti meg őket.</p>
+        <div style="font-family:'Courier New',monospace;background:var(--off);border:1px solid var(--rule);border-radius:var(--r);padding:.5rem 1.2rem;display:inline-block;font-size:.92rem;margin-top:.9rem" id="sub-ref">—</div>
+        <div style="margin-top:2rem">
+          <button class="btn btn-secondary" onclick="go('welcome')" data-i18n="btn_home">← Főoldal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ RESULT LOOKUP ═══════════ -->
+<div id="screen-result-lookup" class="screen">
+  <div class="page">
+    <div class="panel">
+      <div class="panel-head">
+        <h2 data-i18n="lookup_title">Eredmény lekérdezése</h2>
+        <p class="subtitle" data-i18n="lookup_sub">Adja meg azonosítóit a közzétett eredmény megtekintéséhez.</p>
+      </div>
+      <div class="panel-body">
+        <div class="field">
+          <label data-i18n="exam_code">Vizsgakód</label>
+          <input id="rl-code" type="text" class="mono" placeholder="pl. VIZSGA-2025-001" oninput="this.value=this.value.toUpperCase()">
+        </div>
+        <div class="field">
+          <label data-i18n="examinee_id">Vizsgázói azonosító</label>
+          <input id="rl-eid" type="text" class="mono" placeholder="pl. VZ-00042" oninput="this.value=this.value.toUpperCase()">
+        </div>
+        <div id="rl-err" class="alert alert-danger" style="display:none;margin-top:.6rem"></div>
+      </div>
+      <div class="panel-foot">
+        <button class="btn btn-secondary" onclick="go('welcome')" data-i18n="btn_back">← Vissza</button>
+        <button class="btn btn-primary" onclick="lookupResult()" data-i18n="btn_lookup">Eredmény megtekintése →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ RESULT VIEW ═══════════ -->
+<div id="screen-result-view" class="screen">
+  <div class="page">
+    <div class="panel">
+      <div class="panel-head" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
+        <div><h2 data-i18n="result_title">Vizsga eredménye</h2><p class="subtitle" id="rv-sub">—</p></div>
+        <span class="badge" id="rv-grade-badge">—</span>
+      </div>
+      <div class="panel-body">
+        <div class="score-block">
+          <div>
+            <div class="score-pts" id="rv-pts">0</div>
+            <div class="score-pts-lbl" data-i18n="competence_points">Kompetenciapontok</div>
+            <div class="band-bar" style="width:200px"><div class="band-fill" id="rv-band" style="width:0%"></div></div>
+            <div style="font-size:.7rem;color:var(--muted)" data-i18n="out_of_2500">2500-ból</div>
+          </div>
+          <div style="flex:1">
+            <div class="score-grade" id="rv-grade">—</div>
+            <div style="font-size:.88rem;color:var(--mid)" id="rv-msg"></div>
+            <div class="score-stats">
+              <div class="score-stat"><div class="score-stat-num" id="rv-correct">0</div><div class="score-stat-lbl" data-i18n="correct">Helyes</div></div>
+              <div class="score-stat"><div class="score-stat-num" id="rv-wrong">0</div><div class="score-stat-lbl" data-i18n="incorrect">Helytelen</div></div>
+              <div class="score-stat"><div class="score-stat-num" id="rv-time">—</div><div class="score-stat-lbl" data-i18n="time_used">Felhasznált idő</div></div>
+            </div>
+          </div>
+        </div>
+        <h3 style="margin-bottom:.9rem" data-i18n="question_review">Kérdések áttekintése</h3>
+        <div id="rv-review"></div>
+      </div>
+      <div class="panel-foot">
+        <button class="btn btn-secondary" onclick="go('welcome')" data-i18n="btn_home">← Főoldal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ADMIN LOGIN ═══════════ -->
+<div id="screen-admin-login" class="screen">
+  <div style="max-width:400px;width:100%;padding:1rem;margin:auto">
+    <div class="panel">
+      <div class="panel-head">
+        <h2 data-i18n="admin_login_title">Adminisztrátori hozzáférés</h2>
+        <p class="subtitle" data-i18n="admin_login_sub">Korlátozott hozzáférés — kizárólag jogosult személyek számára.</p>
+      </div>
+      <div class="panel-body">
+        <div class="field">
+          <label data-i18n="admin_password">Adminisztrátori jelszó</label>
+          <input id="admin-pw" type="password" onkeydown="if(event.key==='Enter')doAdminLogin()">
+        </div>
+        <div id="admin-login-err" class="alert alert-danger" style="display:none"></div>
+      </div>
+      <div class="panel-foot">
+        <button class="btn btn-secondary" onclick="go('welcome')" data-i18n="btn_back">← Vissza</button>
+        <button class="btn btn-primary" onclick="doAdminLogin()" data-i18n="btn_enter">Belépés →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ADMIN PANEL ═══════════ -->
+<div id="screen-admin" class="screen">
+  <div class="page-wide">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.4rem;flex-wrap:wrap;gap:.65rem">
+      <div><h2 data-i18n="admin_panel_title">Adminisztrátori panel</h2><p class="subtitle" data-i18n="admin_panel_sub">Vizsgák, feladatbank, eredmények és közzétételek kezelése.</p></div>
+      <button class="btn btn-secondary btn-sm" onclick="go('welcome')" data-i18n="btn_exit">← Kilépés</button>
+    </div>
+
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('tab-exams',this)" data-i18n="tab_exams">Vizsgák</button>
+      <button class="tab-btn" onclick="switchTab('tab-tasks',this)" data-i18n="tab_tasks">Feladatbank</button>
+      <button class="tab-btn" onclick="switchTab('tab-examinees',this)" data-i18n="tab_examinees">Vizsgázók</button>
+      <button class="tab-btn" onclick="switchTab('tab-results',this)" data-i18n="tab_results">Eredmények</button>
+      <button class="tab-btn" onclick="switchTab('tab-publish',this)" data-i18n="tab_publish">Közzététel</button>
+    </div>
+
+    <!-- TAB: EXAMS -->
+    <div id="tab-exams" class="tab-panel active">
+      <div class="two-col">
+        <div class="panel">
+          <div class="panel-head"><h3 data-i18n="create_exam">Vizsga létrehozása</h3></div>
+          <div class="panel-body">
+            <div class="field"><label data-i18n="exam_title">Vizsga megnevezése</label><input id="ex-title" type="text"></div>
+            <div class="field"><label data-i18n="category">Kategória</label><input id="ex-cat" type="text" placeholder="pl. Természettudomány"></div>
+            <div class="field-row">
+              <div class="field"><label data-i18n="exam_code">Vizsgakód</label><input id="ex-code" type="text" class="mono" maxlength="24" oninput="this.value=this.value.toUpperCase()"><div class="field-hint" data-i18n="exam_code_hint2">Egyedi. Vizsgázókkal megosztandó.</div></div>
+              <div class="field"><label data-i18n="time_limit">Időkorlát (perc)</label><input id="ex-time" type="number" min="5" max="180"></div>
+            </div>
+            <div class="field"><label data-i18n="description">Leírás</label><textarea id="ex-desc" rows="2"></textarea></div>
+            <div id="ex-err" class="alert alert-danger" style="display:none;margin-top:.5rem"></div>
+          </div>
+          <div class="panel-foot"><button class="btn btn-primary" onclick="adminCreateExam()" data-i18n="btn_create_exam">Vizsga létrehozása</button></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3 data-i18n="exam_list">Vizsgák listája</h3></div>
+          <div style="overflow-x:auto"><table class="data-table"><thead><tr><th data-i18n="th_code">Kód</th><th data-i18n="th_title">Megnevezés</th><th data-i18n="th_tasks">Feladatok</th><th data-i18n="th_time">Idő</th></tr></thead><tbody id="exam-list-body"></tbody></table></div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:1.4rem">
+        <div class="panel-head"><h3 data-i18n="assign_task">Feladat hozzárendelése vizsgához</h3></div>
+        <div class="panel-body">
+          <div class="field-row">
+            <div class="field"><label data-i18n="select_exam">Vizsga kiválasztása</label><select id="assign-exam-sel"></select></div>
+            <div class="field"><label data-i18n="select_task">Feladat kiválasztása</label><select id="assign-task-sel"></select></div>
+          </div>
+          <div id="assign-msg" style="display:none;margin-top:.5rem"></div>
+        </div>
+        <div class="panel-foot"><button class="btn btn-primary" onclick="adminAssignTask()" data-i18n="btn_assign">Hozzárendelés</button></div>
+      </div>
+    </div>
+
+    <!-- TAB: TASKS -->
+    <div id="tab-tasks" class="tab-panel">
+      <div class="two-col">
+        <div class="panel">
+          <div class="panel-head"><h3 data-i18n="add_task">Feladat hozzáadása a bankhoz</h3></div>
+          <div class="panel-body">
+            <div class="field"><label data-i18n="question_text">Kérdés szövege</label><textarea id="task-q" rows="3"></textarea></div>
+            <div class="field-row">
+              <div class="field"><label data-i18n="question_type">Kérdéstípus</label>
+                <select id="task-type" onchange="updateTaskForm()">
+                  <option value="mc" data-i18n="type_mc">Feleletválasztós</option>
+                  <option value="text" data-i18n="type_text">Rövid válasz</option>
+                  <option value="order" data-i18n="type_order">Sorbarendezés</option>
+                  <option value="match" data-i18n="type_match">Párosítás</option>
+                </select>
+              </div>
+              <div class="field"><label data-i18n="difficulty">Nehézség (1–7)</label>
+                <select id="task-diff">
+                  <option value="1" data-i18n="diff_1">1 — Minimális</option>
+                  <option value="2" data-i18n="diff_2">2 — Alap</option>
+                  <option value="3" data-i18n="diff_3">3 — Közepes</option>
+                  <option value="4" selected data-i18n="diff_4">4 — Standard</option>
+                  <option value="5" data-i18n="diff_5">5 — Haladó</option>
+                  <option value="6" data-i18n="diff_6">6 — Szakértői</option>
+                  <option value="7" data-i18n="diff_7">7 — Mester</option>
+                </select>
+              </div>
+            </div>
+            <div id="mc-fields">
+              <div class="field">
+                <label data-i18n="options_label">Válaszlehetőségek (jelölje meg a helyeset)</label>
+                <div id="mc-opts-area"></div>
+                <button type="button" class="btn btn-secondary btn-sm" style="margin-top:.45rem" onclick="addMcOpt()" data-i18n="btn_add_option">+ Lehetőség hozzáadása</button>
+              </div>
+            </div>
+            <div id="text-fields" style="display:none">
+              <div class="field"><label data-i18n="keywords_label">Elfogadott kulcsszavak (vesszővel elválasztva)</label><input id="task-text-ans" type="text"></div>
+            </div>
+            <div id="order-fields" style="display:none">
+              <div class="field"><label data-i18n="order_items_label">Elemek helyes sorrendben (soronként egy)</label><textarea id="task-order-items" rows="4"></textarea></div>
+            </div>
+            <div id="match-fields" style="display:none">
+              <div class="field"><label data-i18n="match_pairs_label">Párok — formátum "Bal | Jobb" (soronként egy)</label><textarea id="task-match-pairs" rows="4"></textarea></div>
+            </div>
+            <div id="task-err" class="alert alert-danger" style="display:none;margin-top:.5rem"></div>
+          </div>
+          <div class="panel-foot"><button class="btn btn-primary" onclick="adminAddTask()" data-i18n="btn_save_task">Mentés a feladatbankba</button></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head" style="display:flex;justify-content:space-between;align-items:center">
+            <h3 data-i18n="task_bank">Feladatbank</h3>
+            <span class="badge badge-blue" id="task-count-badge">0</span>
+          </div>
+          <div style="overflow-x:auto;max-height:520px;overflow-y:auto">
+            <table class="data-table"><thead><tr><th>#</th><th data-i18n="th_question">Kérdés</th><th data-i18n="th_type">Típus</th><th data-i18n="th_diff">Neh.</th><th data-i18n="th_pts">Pont</th></tr></thead><tbody id="task-bank-body"></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: EXAMINEES -->
+    <div id="tab-examinees" class="tab-panel">
+      <div class="two-col">
+        <div class="panel">
+          <div class="panel-head"><h3 data-i18n="register_examinee">Vizsgázó regisztrálása</h3></div>
+          <div class="panel-body">
+            <div class="field"><label data-i18n="select_exam">Vizsga</label><select id="reg-exam-sel"></select></div>
+            <div class="field"><label data-i18n="examinee_id">Vizsgázói azonosító</label><input id="reg-eid" type="text" class="mono" maxlength="14" oninput="this.value=this.value.toUpperCase()" placeholder="pl. VZ-00001"></div>
+            <div id="reg-msg" style="display:none;margin-top:.5rem"></div>
+          </div>
+          <div class="panel-foot"><button class="btn btn-primary" onclick="adminRegisterExaminee()" data-i18n="btn_register">Regisztrálás</button></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head" style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap">
+            <h3 data-i18n="registered_examinees">Regisztrált vizsgázók</h3>
+            <select id="examinees-filter-exam" style="padding:.35rem .65rem;border:1px solid var(--rule);border-radius:var(--r);font-size:.83rem" onchange="loadExaminees()"></select>
+          </div>
+          <div style="overflow-x:auto;max-height:400px;overflow-y:auto">
+            <table class="data-table"><thead><tr><th data-i18n="examinee_id">Azonosító</th><th data-i18n="th_status">Állapot</th></tr></thead><tbody id="examinees-body"></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: RESULTS -->
+    <div id="tab-results" class="tab-panel">
+      <div class="panel">
+        <div class="panel-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
+          <h3 data-i18n="all_results">Összes eredmény</h3>
+          <div style="display:flex;gap:.5rem;align-items:center">
+            <select id="filter-exam" style="padding:.35rem .65rem;border:1px solid var(--rule);border-radius:var(--r);font-size:.83rem" onchange="loadResults()"></select>
+            <button class="btn btn-secondary btn-sm" onclick="loadResults()" data-i18n="btn_refresh">↻ Frissítés</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr><th data-i18n="examinee_id">Vizsgázó</th><th data-i18n="exam_code">Vizsgakód</th><th data-i18n="th_points">Pontszám</th><th data-i18n="th_correct">Helyes</th><th data-i18n="th_status">Állapot</th><th data-i18n="th_submitted">Beadva</th></tr></thead>
+            <tbody id="results-body"></tbody>
+          </table>
+          <div id="no-results-msg" style="text-align:center;padding:2rem;color:var(--muted);font-size:.88rem" data-i18n="no_results">Még nincsenek eredmények.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: PUBLISH -->
+    <div id="tab-publish" class="tab-panel">
+      <div class="panel">
+        <div class="panel-head"><h3 data-i18n="publish_results">Eredmények közzététele</h3></div>
+        <div class="panel-body">
+          <div class="alert alert-warn" style="margin-bottom:1.4rem">
+            <span>⚠️</span><span data-i18n="publish_warn">A közzététel után minden regisztrált vizsgázó megtekintheti saját eredményét. Ez a művelet nem vonható vissza.</span>
+          </div>
+          <table class="data-table">
+            <thead><tr><th data-i18n="th_title">Vizsga</th><th data-i18n="th_code">Kód</th><th data-i18n="th_submissions">Beadások</th><th data-i18n="th_status">Állapot</th><th data-i18n="th_action">Művelet</th></tr></thead>
+            <tbody id="publish-body"></tbody>
+          </table>
+          <div id="no-publish-msg" style="text-align:center;padding:2rem;color:var(--muted);font-size:.88rem;display:none" data-i18n="no_exams">Még nincsenek vizsgák.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  CONFIG — set this to your Cloudflare Worker URL after deploy
+// ═══════════════════════════════════════════════════════════════
+const API = 'https://competencegate.YOUR-SUBDOMAIN.workers.dev';
+
+// ═══════════════════════════════════════════════════════════════
+//  i18n
+// ═══════════════════════════════════════════════════════════════
+let LANG = 'hu';
+
+const T = {
+  hu: {
+    site_title:'KompetenciaKapu — Vizsgáztató Rendszer',
+    welcome_title:'KompetenciaKapu',
+    welcome_sub:'Hivatalos Kompetencia Vizsgáztató Platform',
+    welcome_desc:'Adja meg vizsgaazonosítóját a vizsga megkezdéséhez, vagy lépjen be az adminisztrátori felületre.',
+    btn_start_exam:'Vizsga megkezdése',btn_view_result:'Eredmény megtekintése',btn_admin:'Adminisztrátor',
+    login_title:'Vizsgázó azonosítása',login_sub:'Adja meg intézménye által kiadott vizsgakódot és vizsgázói azonosítót.',
+    login_info:'Az azonosítókat a vizsgáztató intézmény bocsátja ki. Probléma esetén forduljon a felügyelőhöz.',
+    exam_code:'Vizsgakód',exam_code_hint:'A vizsgáztatói kör által kiadott egyedi kód.',exam_code_hint2:'Egyedi. Vizsgázókkal megosztandó.',
+    examinee_id:'Vizsgázói azonosító',examinee_id_hint:'Az intézmény által kiadott személyes azonosító.',
+    btn_back:'← Vissza',btn_verify:'Ellenőrzés és folytatás →',
+    instructions_heading:'Útmutató',
+    instr_items:['Figyelmesen olvassa el az összes kérdést, mielőtt válaszol.','A feleletválasztós kérdéseknél válassza a legjobb választ.','Az időmérő a <strong>Vizsga megkezdése</strong> gombra kattintva indul, és nem szüneteltethető.','A vizsga automatikusan beadásra kerül, ha lejár az idő.','Az alsó navigációs pontok segítségével szabadon mozoghat a kérdések között.','A kompetenciapontszám az egyes feladatok nehézségi fokán alapul.','<strong>Az eredményeket az adminisztrátor teszi közzé egy későbbi időpontban.</strong>'],
+    instr_warn:'Ne zárja be és ne frissítse az oldalt a vizsga közben. Az előrehaladás nem állítható vissza.',
+    btn_begin:'Vizsga megkezdése →',
+    questions:'Kérdések',minutes:'Perc',max_points:'Max. pont',
+    btn_submit:'Beadás',btn_prev:'← Előző',btn_next:'Következő →',
+    q_of:'/ kérdés',answered_pct:'megválaszolva',
+    difficulty_label:'Nehézség',diff_levels:['','Minimális','Alap','Közepes','Standard','Haladó','Szakértői','Mester'],
+    confirm_submit_partial:'%d kérdés megválaszolatlan. Biztosan be szeretné adni a vizsgát?',
+    submitted_title:'Vizsga beadva',
+    submitted_msg:'Válaszai rögzítve lettek. Az eredményeket az adminisztrátor teszi közzé. Amint elérhetővé válnak, az alábbi azonosítóval tekintheti meg őket.',
+    btn_home:'← Főoldal',
+    lookup_title:'Eredmény lekérdezése',lookup_sub:'Adja meg azonosítóit a közzétett eredmény megtekintéséhez.',
+    btn_lookup:'Eredmény megtekintése →',
+    result_title:'Vizsga eredménye',
+    competence_points:'Kompetenciapontok',out_of_2500:'2500-ból',
+    correct:'Helyes',incorrect:'Helytelen',time_used:'Felhasznált idő',
+    question_review:'Kérdések áttekintése',
+    grade_outstanding:'Kiváló',grade_excellent:'Jeles',grade_proficient:'Jó',grade_developing:'Közepes',grade_beginning:'Kezdő',
+    msg_outstanding:'Kiemelkedő teljesítmény. Mesterfokú tudást mutatott ezen a vizsgán.',
+    msg_excellent:'Kiváló eredmény. Magas szintű kompetenciát mutatott ezen a területen.',
+    msg_proficient:'Jó eredmény. A várt szintet meghaladó teljesítmény.',
+    msg_developing:'Fejlődő kompetencia. Javaslunk további tanulást ezen a területen.',
+    msg_beginning:'További tanulás szükséges. Kérjük, tekintse át a tananyagot.',
+    your_answer:'Az Ön válasza',correct_answer:'Helyes válasz',
+    admin_login_title:'Adminisztrátori hozzáférés',admin_login_sub:'Korlátozott hozzáférés — kizárólag jogosult személyek számára.',
+    admin_password:'Adminisztrátori jelszó',btn_enter:'Belépés →',
+    admin_panel_title:'Adminisztrátori panel',admin_panel_sub:'Vizsgák, feladatbank, eredmények és közzétételek kezelése.',
+    btn_exit:'← Kilépés',
+    tab_exams:'Vizsgák',tab_tasks:'Feladatbank',tab_examinees:'Vizsgázók',tab_results:'Eredmények',tab_publish:'Közzététel',
+    create_exam:'Vizsga létrehozása',exam_title:'Vizsga megnevezése',category:'Kategória',time_limit:'Időkorlát (perc)',description:'Leírás',
+    btn_create_exam:'Vizsga létrehozása',
+    exam_list:'Vizsgák listája',th_code:'Kód',th_title:'Megnevezés',th_tasks:'Feladatok',th_time:'Idő',
+    assign_task:'Feladat hozzárendelése vizsgához',select_exam:'Vizsga kiválasztása',select_task:'Feladat kiválasztása',btn_assign:'Hozzárendelés',
+    add_task:'Feladat hozzáadása a bankhoz',question_text:'Kérdés szövege',question_type:'Kérdéstípus',
+    type_mc:'Feleletválasztós',type_text:'Rövid válasz',type_order:'Sorbarendezés',type_match:'Párosítás',
+    difficulty:'Nehézség (1–7)',
+    diff_1:'1 — Minimális',diff_2:'2 — Alap',diff_3:'3 — Közepes',diff_4:'4 — Standard',diff_5:'5 — Haladó',diff_6:'6 — Szakértői',diff_7:'7 — Mester',
+    options_label:'Válaszlehetőségek (jelölje meg a helyeset)',btn_add_option:'+ Lehetőség hozzáadása',
+    keywords_label:'Elfogadott kulcsszavak (vesszővel elválasztva)',
+    order_items_label:'Elemek helyes sorrendben (soronként egy)',
+    match_pairs_label:'Párok — formátum "Bal | Jobb" (soronként egy)',
+    btn_save_task:'Mentés a feladatbankba',
+    task_bank:'Feladatbank',th_question:'Kérdés',th_type:'Típus',th_diff:'Neh.',th_pts:'Pont',
+    register_examinee:'Vizsgázó regisztrálása',btn_register:'Regisztrálás',
+    registered_examinees:'Regisztrált vizsgázók',th_status:'Állapot',
+    all_results:'Összes eredmény',th_points:'Pontszám',th_correct:'Helyes',th_submitted:'Beadva',btn_refresh:'↻ Frissítés',
+    no_results:'Még nincsenek eredmények.',
+    publish_results:'Eredmények közzététele',
+    publish_warn:'A közzététel után minden regisztrált vizsgázó megtekintheti saját eredményét. Ez a művelet nem vonható vissza.',
+    th_submissions:'Beadások',th_action:'Művelet',no_exams:'Még nincsenek vizsgák.',
+    btn_publish:'Közzétesz',status_published:'Közzétett',status_pending:'Függőben',
+    err_fill_required:'Kérjük, töltse ki az összes kötelező mezőt.',
+    err_code_exists:'Ilyen kódú vizsga már létezik.',
+    err_no_exam:'A vizsgakód nem ismert.',err_no_examinee:'Ez az azonosító nem regisztrált erre a vizsgára.',
+    err_already_submitted:'Ezt a vizsgát már beadta.',err_not_released:'Az eredmények még nem kerültek közzétételre.',
+    err_no_result:'Nem található eredmény ezekkel az azonosítókkal.',
+    err_task_required:'A kérdés szövege kötelező.',err_min_options:'Legalább 2 válaszlehetőség szükséges.',
+    err_mark_correct:'Jelölje meg a helyes választ.',err_keywords:'Adjon meg legalább egy kulcsszót.',
+    err_order_items:'Legalább 2 elem szükséges.',err_match_pairs:'Legalább 2 pár szükséges, "Bal | Jobb" formátumban.',
+    err_register_required:'Adjon meg egy vizsgát és vizsgázói azonosítót.',
+    err_already_registered:'Ez az azonosító már regisztrálva van erre a vizsgára.',
+    success_task_assigned:'Feladat sikeresen hozzárendelve.',
+    success_examinee_registered:'Vizsgázó sikeresen regisztrálva.',
+    network_error:'Hálózati hiba. Ellenőrizze a kapcsolatot.',
+    all_exams_option:'Összes vizsga',
+    select_exam_first:'— Válasszon vizsgát —',
+    min_placeholder:'perc',
+    no_tasks:'Még nincsenek feladatok.',
+    no_examinees:'Nincs regisztrált vizsgázó.',
+    task_already_assigned:'Ez a feladat már hozzá van rendelve ehhez a vizsgához.',
+  },
+  en: {
+    site_title:'CompetenceGate — Examination System',
+    welcome_title:'CompetenceGate',
+    welcome_sub:'Official Competence Examination Platform',
+    welcome_desc:'Enter your examination credentials to begin, or access the administrator panel.',
+    btn_start_exam:'Start Examination',btn_view_result:'View My Result',btn_admin:'Administrator',
+    login_title:'Examinee Identification',login_sub:'Enter the examination code and examinee ID issued by your institution.',
+    login_info:'Your credentials were issued by the examination authority. Contact your invigilator if you have not received them.',
+    exam_code:'Examination Code',exam_code_hint:'A unique code issued per examination session.',exam_code_hint2:'Unique. Share with examinees.',
+    examinee_id:'Examinee ID',examinee_id_hint:'Your personal identifier assigned by the authority.',
+    btn_back:'← Back',btn_verify:'Verify & Continue →',
+    instructions_heading:'Instructions',
+    instr_items:['Read each question carefully before answering.','For multiple-choice questions, select the single best answer.','The timer begins when you press <strong>Begin Examination</strong> and cannot be paused.','The examination is submitted automatically when time expires.','You may navigate freely between questions using the dot panel at the bottom.','Your competence score is based on the difficulty rating of each task.','<strong>Results will be released by the administrator at a later date.</strong>'],
+    instr_warn:'Do not close or refresh the browser during the examination. Your progress cannot be recovered.',
+    btn_begin:'Begin Examination →',
+    questions:'Questions',minutes:'Minutes',max_points:'Max Points',
+    btn_submit:'Submit',btn_prev:'← Previous',btn_next:'Next →',
+    q_of:'of',answered_pct:'answered',
+    difficulty_label:'Difficulty',diff_levels:['','Minimal','Basic','Moderate','Standard','Advanced','Expert','Mastery'],
+    confirm_submit_partial:'You have %d unanswered question(s). Submit anyway?',
+    submitted_title:'Examination Submitted',
+    submitted_msg:'Your responses have been recorded. Results will be released by the administrator. Once available, use the reference below to view your results.',
+    btn_home:'← Home',
+    lookup_title:'Result Lookup',lookup_sub:'Enter your credentials to view your published result.',
+    btn_lookup:'View Result →',
+    result_title:'Examination Result',
+    competence_points:'Competence Points',out_of_2500:'out of 2500',
+    correct:'Correct',incorrect:'Incorrect',time_used:'Time Used',
+    question_review:'Question Review',
+    grade_outstanding:'Outstanding',grade_excellent:'Excellent',grade_proficient:'Proficient',grade_developing:'Developing',grade_beginning:'Beginning',
+    msg_outstanding:'Exceptional performance. You have demonstrated mastery of this examination.',
+    msg_excellent:'Excellent result. You show a high level of competence in this area.',
+    msg_proficient:'Good result. You are above the expected standard.',
+    msg_developing:'You are developing competence. Continued study is recommended.',
+    msg_beginning:'Further study is needed. Please review the learning materials.',
+    your_answer:'Your answer',correct_answer:'Correct answer',
+    admin_login_title:'Administrator Access',admin_login_sub:'Restricted — authorised personnel only.',
+    admin_password:'Administrator Password',btn_enter:'Access Panel →',
+    admin_panel_title:'Administration Panel',admin_panel_sub:'Manage examinations, task bank, results, and publication.',
+    btn_exit:'← Exit',
+    tab_exams:'Examinations',tab_tasks:'Task Bank',tab_examinees:'Examinees',tab_results:'Results',tab_publish:'Publish',
+    create_exam:'Create Examination',exam_title:'Examination Title',category:'Category',time_limit:'Time Limit (min)',description:'Description',
+    btn_create_exam:'Create Examination',
+    exam_list:'Examination List',th_code:'Code',th_title:'Title',th_tasks:'Tasks',th_time:'Time',
+    assign_task:'Assign Task to Examination',select_exam:'Select Examination',select_task:'Select Task',btn_assign:'Assign',
+    add_task:'Add Task to Bank',question_text:'Question Text',question_type:'Question Type',
+    type_mc:'Multiple Choice',type_text:'Short Answer',type_order:'Ordering',type_match:'Matching',
+    difficulty:'Difficulty (1–7)',
+    diff_1:'1 — Minimal',diff_2:'2 — Basic',diff_3:'3 — Moderate',diff_4:'4 — Standard',diff_5:'5 — Advanced',diff_6:'6 — Expert',diff_7:'7 — Mastery',
+    options_label:'Options (mark the correct one)',btn_add_option:'+ Add Option',
+    keywords_label:'Accepted keywords (comma-separated)',
+    order_items_label:'Items in correct order (one per line)',
+    match_pairs_label:'Pairs — format "Left | Right" (one per line)',
+    btn_save_task:'Save to Task Bank',
+    task_bank:'Task Bank',th_question:'Question',th_type:'Type',th_diff:'Diff.',th_pts:'Points',
+    register_examinee:'Register Examinee',btn_register:'Register',
+    registered_examinees:'Registered Examinees',th_status:'Status',
+    all_results:'All Results',th_points:'Score',th_correct:'Correct',th_submitted:'Submitted',btn_refresh:'↻ Refresh',
+    no_results:'No results yet.',
+    publish_results:'Publish Results',
+    publish_warn:'Once published, all examinees can view their individual scores. This action cannot be undone.',
+    th_submissions:'Submissions',th_action:'Action',no_exams:'No examinations yet.',
+    btn_publish:'Publish',status_published:'Published',status_pending:'Pending',
+    err_fill_required:'Please fill in all required fields.',
+    err_code_exists:'An examination with that code already exists.',
+    err_no_exam:'Examination code not recognised.',err_no_examinee:'Examinee ID not registered for this examination.',
+    err_already_submitted:'This examination has already been submitted.',err_not_released:'Results have not yet been released.',
+    err_no_result:'No result found for these credentials.',
+    err_task_required:'Question text is required.',err_min_options:'At least 2 options are required.',
+    err_mark_correct:'Please mark the correct answer.',err_keywords:'Provide at least one keyword.',
+    err_order_items:'At least 2 items are required.',err_match_pairs:'At least 2 pairs required in "Left | Right" format.',
+    err_register_required:'Please select an exam and enter an examinee ID.',
+    err_already_registered:'This ID is already registered for this examination.',
+    success_task_assigned:'Task successfully assigned.',
+    success_examinee_registered:'Examinee successfully registered.',
+    network_error:'Network error. Please check your connection.',
+    all_exams_option:'All examinations',
+    select_exam_first:'— Select examination —',
+    min_placeholder:'min',
+    no_tasks:'No tasks yet.',
+    no_examinees:'No registered examinees.',
+    task_already_assigned:'This task is already assigned to this examination.',
+  }
+};
+
+function t(key) { return (T[LANG] && T[LANG][key]) || (T.hu[key]) || key; }
+
+function setLang(lang) {
+  LANG = lang;
+  document.getElementById('lang-hu').classList.toggle('active', lang==='hu');
+  document.getElementById('lang-en').classList.toggle('active', lang==='en');
+  document.documentElement.lang = lang;
+  document.title = lang === 'hu' ? 'KompetenciaKapu' : 'CompetenceGate';
+  applyTranslations();
+  updateInstructionsList();
+}
+
+function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = t(key);
+    if (val) el.innerHTML = val;
+  });
+}
+
+function updateInstructionsList() {
+  const ul = document.getElementById('instr-list');
+  if (!ul) return;
+  const items = t('instr_items');
+  if (Array.isArray(items)) ul.innerHTML = items.map(i=>`<li>${i}</li>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  API HELPERS
+// ═══════════════════════════════════════════════════════════════
+let adminPassword = '';
+
+async function apiFetch(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers||{}) };
+  if (adminPassword) headers['X-Admin-Password'] = adminPassword;
+  const res = await fetch(API + path, { ...opts, headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || t('network_error'));
+  return data;
+}
+
+async function apiGet(path)       { return apiFetch(path, { method:'GET' }); }
+async function apiPost(path, body){ return apiFetch(path, { method:'POST', body: JSON.stringify(body) }); }
+async function apiDelete(path)    { return apiFetch(path, { method:'DELETE' }); }
+
+// ═══════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════
+let session = { examCode:null, examineeId:null, tasks:[], answers:{}, currentQ:0, timerInt:null, timeLeft:0, timeUsed:0 };
+let cachedExams = [], cachedTasks = [];
+let mcOpts = [];
+
+// ═══════════════════════════════════════════════════════════════
+//  NAV
+// ═══════════════════════════════════════════════════════════════
+function go(screen) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+screen).classList.add('active');
+  window.scrollTo(0,0);
+  if (screen==='admin') refreshAdminData();
+}
+
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  btn.classList.add('active');
+  if (tabId==='tab-results') loadResults();
+  if (tabId==='tab-publish') loadPublish();
+  if (tabId==='tab-examinees') loadExaminees();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  EXAMINEE LOGIN
+// ═══════════════════════════════════════════════════════════════
+async function doLogin() {
+  const code = v('login-code'), eid = v('login-eid');
+  const errEl = document.getElementById('login-err');
+  errEl.style.display = 'none';
+  if (!code||!eid) { showErr(errEl, t('err_fill_required')); return; }
+
+  setBtnLoading('login-btn', true);
+  try {
+    const data = await apiPost('/api/verify', { examCode:code, examineeId:eid });
+
+    if (data.status === 'already_submitted') {
+      if (data.released) {
+        await showResultFromAPI(code, eid);
+      } else {
+        document.getElementById('sub-ref').textContent = `${eid} · ${code}`;
+        go('submitted');
+      }
+      return;
+    }
+
+    session.examCode = code; session.examineeId = eid;
+    document.getElementById('instr-title').textContent = data.examTitle;
+    document.getElementById('instr-cat').textContent   = data.category||'—';
+    document.getElementById('instr-desc').textContent  = data.desc||'';
+    document.getElementById('instr-qcount').textContent = data.taskCount;
+    document.getElementById('instr-time').textContent   = data.timeMins;
+    document.getElementById('header-meta').textContent  = `${eid} · ${code}`;
+    updateInstructionsList();
+    go('instructions');
+  } catch(e) { showErr(errEl, e.message); }
+  finally { setBtnLoading('login-btn', false); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  EXAM ENGINE
+// ═══════════════════════════════════════════════════════════════
+async function beginExam() {
+  const data = await apiGet(`/api/exam?code=${session.examCode}&examineeId=${session.examineeId}`);
+  if (data.alreadySubmitted) { go('submitted'); return; }
+  session.tasks   = data.tasks;
+  session.answers = {};
+  session.currentQ = 0;
+  session.timeLeft = data.timeMins * 60;
+  session.timeUsed = 0;
+  document.getElementById('exam-bar-title').textContent = data.title;
+  clearInterval(session.timerInt);
+  session.timerInt = setInterval(tick, 1000);
+  go('exam');
+  renderQ();
+}
+
+function tick() {
+  session.timeLeft--; session.timeUsed++;
+  const m=String(Math.floor(session.timeLeft/60)).padStart(2,'0');
+  const s=String(session.timeLeft%60).padStart(2,'0');
+  document.getElementById('timer-box').textContent=m+':'+s;
+  document.getElementById('timer-box').classList.toggle('urgent', session.timeLeft<60);
+  if (session.timeLeft<=0) { clearInterval(session.timerInt); doSubmit(); }
+}
+
+function renderQ() {
+  const tasks=session.tasks, i=session.currentQ, t0=tasks[i], total=tasks.length;
+  const answered=Object.keys(session.answers).filter(k=>session.answers[k]!==undefined&&session.answers[k]!=='').length;
+  document.getElementById('q-label').textContent = `${t('questions')} ${i+1} ${t('q_of')} ${total}`;
+  document.getElementById('q-text').textContent  = t0.text;
+
+  const diffLevels = t('diff_levels');
+  document.getElementById('q-diff').innerHTML=`<span class="q-diff-pip"></span>${t('difficulty_label')}: <strong>${t0.difficulty}</strong> — ${diffLevels[t0.difficulty]||t0.difficulty}`;
+
+  const pct=Math.round(answered/total*100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-label').textContent=`${i+1} / ${total}`;
+  document.getElementById('prog-pct').textContent=`${pct}% ${t('answered_pct')}`;
+  document.getElementById('btn-prev').disabled=(i===0);
+  document.getElementById('btn-next').textContent=(i===total-1)?t('btn_submit'):t('btn_next');
+  renderQArea(t0, i);
+  renderDots();
+}
+
+function renderQArea(t0, qi) {
+  const area=document.getElementById('q-area'); area.innerHTML='';
+  const saved=session.answers[qi];
+
+  if (t0.type==='mc') {
+    const ul=document.createElement('div'); ul.className='options';
+    t0.options.forEach((opt,oi)=>{
+      const div=document.createElement('div'); div.className='opt'+(saved===oi?' selected':'');
+      div.innerHTML=`<span class="opt-letter">${String.fromCharCode(65+oi)}</span><span>${opt}</span>`;
+      div.onclick=()=>{session.answers[qi]=oi;renderQ();};
+      ul.appendChild(div);
+    });
+    area.appendChild(ul);
+  } else if (t0.type==='text') {
+    const inp=document.createElement('input');
+    inp.type='text';inp.placeholder='…';inp.value=saved||'';
+    inp.style.cssText='width:100%;padding:.6rem .85rem;border:1px solid var(--rule);border-radius:var(--r);font-size:.92rem;';
+    inp.oninput=()=>{session.answers[qi]=inp.value;renderDots();};
+    area.appendChild(inp);
+  } else if (t0.type==='order') {
+    const order=saved||t0.items.map((_,i)=>i);
+    const ul=document.createElement('div');ul.className='order-list';
+    order.forEach((itemIdx,pos)=>{
+      const div=document.createElement('div');div.className='order-item';div.draggable=true;
+      div.innerHTML=`<span class="order-handle">⠿</span><span class="order-num">${pos+1}</span><span>${t0.items[itemIdx]}</span>`;
+      div.ondragstart=e=>{e.dataTransfer.setData('text',pos);div.classList.add('dragging');};
+      div.ondragend=()=>div.classList.remove('dragging');
+      div.ondragover=e=>e.preventDefault();
+      div.ondrop=e=>{
+        e.preventDefault();
+        const from=+e.dataTransfer.getData('text'),to=pos;
+        const cur=[...(session.answers[qi]||t0.items.map((_,i)=>i))];
+        [cur[from],cur[to]]=[cur[to],cur[from]];
+        session.answers[qi]=cur;renderQ();
+      };
+      ul.appendChild(div);
+    });
+    area.appendChild(ul);
+    if (!saved) session.answers[qi]=order;
+  } else if (t0.type==='match') {
+    const savedMap=saved||{};
+    const tbl=document.createElement('table');tbl.className='match-tbl';
+    t0.pairs.forEach(([left])=>{
+      const opts=t0.matchOptions||[];
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td class="match-left">${left}</td><td class="match-sel"><select><option value="">—</option>${opts.map(r=>`<option value="${r}"${savedMap[left]===r?' selected':''}>${r}</option>`).join('')}</select></td>`;
+      tr.querySelector('select').onchange=e=>{const cur=session.answers[qi]||{};cur[left]=e.target.value;session.answers[qi]=cur;renderDots();};
+      tbl.appendChild(tr);
+    });
+    area.appendChild(tbl);
+  }
+}
+
+function renderDots() {
+  const dots=document.getElementById('q-dots');dots.innerHTML='';
+  session.tasks.forEach((_,i)=>{
+    const ans=session.answers[i];const isAns=ans!==undefined&&ans!==''&&ans!==null;
+    const d=document.createElement('div');
+    d.className='q-dot'+(isAns?' answered':'')+(i===session.currentQ?' current':'');
+    d.textContent=i+1;d.onclick=()=>{session.currentQ=i;renderQ();};
+    dots.appendChild(d);
+  });
+}
+
+function prevQ(){if(session.currentQ>0){session.currentQ--;renderQ();}}
+function nextQ(){
+  if(session.currentQ<session.tasks.length-1){session.currentQ++;renderQ();}
+  else confirmSubmit();
+}
+
+async function confirmSubmit() {
+  const total=session.tasks.length;
+  const answered=Object.keys(session.answers).filter(k=>{const v=session.answers[k];return v!==undefined&&v!==''&&v!==null;}).length;
+  const unanswered=total-answered;
+  if(unanswered>0&&!confirm(t('confirm_submit_partial').replace('%d',unanswered))) return;
+  clearInterval(session.timerInt);
+  await doSubmit();
+}
+
+async function doSubmit() {
+  clearInterval(session.timerInt);
+  try {
+    await apiPost('/api/submit',{examCode:session.examCode,examineeId:session.examineeId,answers:session.answers,timeUsed:session.timeUsed});
+    document.getElementById('sub-ref').textContent=`${session.examineeId} · ${session.examCode}`;
+    go('submitted');
+  } catch(e) { alert(e.message); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RESULT LOOKUP + VIEW
+// ═══════════════════════════════════════════════════════════════
+async function lookupResult() {
+  const code=v('rl-code'),eid=v('rl-eid'),errEl=document.getElementById('rl-err');
+  errEl.style.display='none';
+  if(!code||!eid){showErr(errEl,t('err_fill_required'));return;}
+  try { await showResultFromAPI(code,eid); }
+  catch(e){ showErr(errEl, e.message); }
+}
+
+async function showResultFromAPI(code,eid) {
+  const rec=await apiGet(`/api/result?examCode=${code}&examineeId=${eid}`);
+  renderResultView(rec);
+}
+
+function renderResultView(rec) {
+  document.getElementById('rv-sub').textContent=`${rec.examTitle||rec.examCode} · ${rec.examineeId}`;
+  document.getElementById('rv-pts').textContent=rec.points;
+  document.getElementById('rv-correct').textContent=rec.correct;
+  document.getElementById('rv-wrong').textContent=rec.total-rec.correct;
+  document.getElementById('rv-time').textContent=fmtTime(rec.timeUsed);
+  const grade=pointsToGrade(rec.points);
+  const badge=document.getElementById('rv-grade-badge');
+  badge.textContent=t(grade.labelKey);badge.className='badge '+grade.cls;
+  document.getElementById('rv-grade').textContent=t(grade.labelKey);
+  document.getElementById('rv-msg').textContent=t(grade.msgKey);
+  setTimeout(()=>{document.getElementById('rv-band').style.width=Math.round(rec.points/2500*100)+'%';},80);
+
+  const reviewEl=document.getElementById('rv-review');reviewEl.innerHTML='';
+  (rec.review||[]).forEach((r,i)=>{
+    const div=document.createElement('div');
+    div.style.cssText='border:1px solid var(--rule);border-radius:var(--r);padding:.95rem;margin-bottom:.6rem';
+    const diffLevels=t('diff_levels');
+    div.innerHTML=`
+      <div style="font-size:.72rem;color:var(--muted);margin-bottom:.3rem">
+        Q${i+1} · ${t('difficulty_label')} ${r.difficulty} · ${r.correct?`<span style="color:var(--success)">✓ ${t('correct')}</span>`:`<span style="color:var(--danger)">✗ ${t('incorrect')}</span>`}
+      </div>
+      <div style="font-family:'EB Garamond',serif;font-size:1.1rem;margin-bottom:.45rem">${r.question}</div>
+      <div style="font-size:.82rem;color:var(--mid)">${t('your_answer')}: <strong>${formatAnsDisplay(r.yourAnswer)}</strong></div>
+      ${!r.correct?`<div style="font-size:.82rem;color:var(--success);margin-top:.2rem">${t('correct_answer')}: <strong>${r.correctAnswer}</strong></div>`:''}`;
+    reviewEl.appendChild(div);
+  });
+  go('result-view');
+}
+
+function pointsToGrade(pts) {
+  if(pts>=2200) return {labelKey:'grade_outstanding',msgKey:'msg_outstanding',cls:'badge-green'};
+  if(pts>=1700) return {labelKey:'grade_excellent',  msgKey:'msg_excellent',  cls:'badge-green'};
+  if(pts>=1200) return {labelKey:'grade_proficient', msgKey:'msg_proficient', cls:'badge-blue'};
+  if(pts>=700)  return {labelKey:'grade_developing', msgKey:'msg_developing', cls:'badge-yellow'};
+  return {labelKey:'grade_beginning',msgKey:'msg_beginning',cls:'badge-red'};
+}
+
+function formatAnsDisplay(ans) {
+  if(ans===undefined||ans===null||ans==='') return '—';
+  if(typeof ans==='object'&&!Array.isArray(ans)) return Object.entries(ans).map(([l,r])=>`${l} → ${r}`).join(', ');
+  if(Array.isArray(ans)) return ans.join(' → ');
+  return ans;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ADMIN
+// ═══════════════════════════════════════════════════════════════
+async function doAdminLogin() {
+  const pw=document.getElementById('admin-pw').value;
+  const errEl=document.getElementById('admin-login-err');
+  errEl.style.display='none';
+  adminPassword=pw;
+  try {
+    await apiGet('/api/admin/exams');
+    document.getElementById('admin-pw').value='';
+    go('admin');
+  } catch(e) { adminPassword=''; showErr(errEl, e.message); }
+}
+
+async function refreshAdminData() {
+  try {
+    [cachedExams, cachedTasks] = await Promise.all([apiGet('/api/admin/exams'), apiGet('/api/admin/tasks')]);
+    renderExamList();
+    renderTaskBank();
+    populateExamSelects();
+    loadResults();
+    loadPublish();
+  } catch(e) { console.error(e); }
+}
+
+// ─── EXAMS ───
+async function adminCreateExam() {
+  const title=v('ex-title'),cat=v('ex-cat'),code=v('ex-code'),timeMins=+v('ex-time'),desc=v('ex-desc');
+  const errEl=document.getElementById('ex-err');errEl.style.display='none';
+  if(!title||!code||!timeMins){showErr(errEl,t('err_fill_required'));return;}
+  try {
+    const exam=await apiPost('/api/admin/exams',{title,category:cat,code,timeMins,desc});
+    cachedExams.push(exam);
+    ['ex-title','ex-cat','ex-code','ex-time','ex-desc'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    renderExamList(); populateExamSelects(); loadPublish();
+  } catch(e){showErr(errEl,e.message);}
+}
+
+function renderExamList() {
+  const tbody=document.getElementById('exam-list-body');if(!tbody)return;
+  tbody.innerHTML='';
+  if(!cachedExams.length){tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:1.5rem">${t('no_exams')}</td></tr>`;return;}
+  cachedExams.forEach(e=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><code style="font-size:.8rem">${e.code}</code></td><td>${e.title}</td><td>${e.taskIds.length}</td><td>${e.timeMins} ${t('min_placeholder')}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+async function adminAssignTask() {
+  const examId=document.getElementById('assign-exam-sel').value;
+  const taskId=document.getElementById('assign-task-sel').value;
+  const msgEl=document.getElementById('assign-msg');msgEl.style.display='none';
+  if(!examId||!taskId) return;
+  const exam=cachedExams.find(e=>e.id===examId);
+  try {
+    await apiPost('/api/admin/exams/assign',{examCode:exam.code,taskId});
+    exam.taskIds.push(taskId);
+    msgEl.className='alert alert-success';msgEl.style.display='flex';msgEl.textContent=t('success_task_assigned');
+    renderExamList();
+  } catch(e){msgEl.className='alert alert-danger';msgEl.style.display='flex';msgEl.textContent=e.message;}
+}
+
+// ─── TASKS ───
+function initMcOpts(){mcOpts=[{text:'',correct:true},{text:'',correct:false}];renderMcOpts();}
+function renderMcOpts(){
+  const area=document.getElementById('mc-opts-area');if(!area)return;
+  area.innerHTML='';
+  mcOpts.forEach((opt,i)=>{
+    const row=document.createElement('div');row.className='mc-opt-row';
+    row.innerHTML=`<input type="text" value="${opt.text}" placeholder="${String.fromCharCode(65+i)}" oninput="mcOpts[${i}].text=this.value">
+    <label><input type="radio" name="mc-correct" ${opt.correct?'checked':''} onchange="mcOpts.forEach((_,j)=>mcOpts[j].correct=j===${i})"> ${t('correct')}</label>
+    <button class="btn btn-secondary btn-sm" style="padding:.28rem .55rem" onclick="mcOpts.splice(${i},1);renderMcOpts()">✕</button>`;
+    area.appendChild(row);
+  });
+}
+function addMcOpt(){mcOpts.push({text:'',correct:false});renderMcOpts();}
+
+function updateTaskForm(){
+  const type=document.getElementById('task-type').value;
+  document.getElementById('mc-fields').style.display   =type==='mc'    ?'block':'none';
+  document.getElementById('text-fields').style.display =type==='text'  ?'block':'none';
+  document.getElementById('order-fields').style.display=type==='order' ?'block':'none';
+  document.getElementById('match-fields').style.display=type==='match' ?'block':'none';
+}
+
+async function adminAddTask(){
+  const q=v('task-q'),type=v('task-type'),difficulty=+v('task-diff');
+  const errEl=document.getElementById('task-err');errEl.style.display='none';
+  if(!q){showErr(errEl,t('err_task_required'));return;}
+  let body={text:q,type,difficulty};
+  if(type==='mc'){
+    const filled=mcOpts.filter(o=>o.text.trim());
+    if(filled.length<2){showErr(errEl,t('err_min_options'));return;}
+    const ci=mcOpts.findIndex(o=>o.correct);
+    if(ci<0||!mcOpts[ci].text.trim()){showErr(errEl,t('err_mark_correct'));return;}
+    body.options=mcOpts.map(o=>o.text.trim());body.correctIdx=ci;
+  } else if(type==='text'){
+    const kw=v('task-text-ans');if(!kw){showErr(errEl,t('err_keywords'));return;}
+    body.keywords=kw.split(',').map(k=>k.trim()).filter(Boolean);
+  } else if(type==='order'){
+    const items=v('task-order-items').split('\n').map(s=>s.trim()).filter(Boolean);
+    if(items.length<2){showErr(errEl,t('err_order_items'));return;}
+    body.items=items;
+  } else if(type==='match'){
+    const lines=v('task-match-pairs').split('\n').map(s=>s.trim()).filter(Boolean);
+    const pairs=lines.map(l=>l.split('|').map(s=>s.trim()));
+    if(pairs.length<2||pairs.some(p=>p.length<2)){showErr(errEl,t('err_match_pairs'));return;}
+    body.pairs=pairs;
+  }
+  try {
+    const task=await apiPost('/api/admin/tasks',body);
+    cachedTasks.push(task);
+    document.getElementById('task-q').value='';
+    if(type==='text') document.getElementById('task-text-ans').value='';
+    if(type==='order') document.getElementById('task-order-items').value='';
+    if(type==='match') document.getElementById('task-match-pairs').value='';
+    initMcOpts();
+    renderTaskBank();populateExamSelects();
+  } catch(e){showErr(errEl,e.message);}
+}
+
+const DIFF_WEIGHT=[0,1,1.5,2.5,4,6.5,10,16];
+
+function renderTaskBank(){
+  const tbody=document.getElementById('task-bank-body');if(!tbody)return;
+  tbody.innerHTML='';
+  if(!cachedTasks.length){tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem">${t('no_tasks')}</td></tr>`;return;}
+  cachedTasks.forEach((tk,i)=>{
+    const pts=Math.round(DIFF_WEIGHT[tk.difficulty]/DIFF_WEIGHT[7]*2500);
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="color:var(--muted)">${i+1}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${tk.text}</td><td><span class="badge badge-blue">${tk.type.toUpperCase()}</span></td><td>${tk.difficulty}</td><td>${pts}</td>`;
+    tbody.appendChild(tr);
+  });
+  const badge=document.getElementById('task-count-badge');
+  if(badge) badge.textContent=cachedTasks.length;
+}
+
+// ─── EXAMINEES ───
+async function adminRegisterExaminee(){
+  const examCode=document.getElementById('reg-exam-sel').value;
+  const eid=v('reg-eid');
+  const msgEl=document.getElementById('reg-msg');msgEl.style.display='none';
+  if(!examCode||!eid){msgEl.className='alert alert-danger';msgEl.style.display='flex';msgEl.textContent=t('err_register_required');return;}
+  try {
+    await apiPost('/api/admin/examinees',{examCode,examineeId:eid});
+    document.getElementById('reg-eid').value='';
+    msgEl.className='alert alert-success';msgEl.style.display='flex';msgEl.textContent=t('success_examinee_registered');
+    loadExaminees();
+  } catch(e){msgEl.className='alert alert-danger';msgEl.style.display='flex';msgEl.textContent=e.message;}
+}
+
+async function loadExaminees(){
+  const sel=document.getElementById('examinees-filter-exam');
+  if(!sel||!sel.value){return;}
+  const tbody=document.getElementById('examinees-body');
+  try {
+    const data=await apiGet(`/api/admin/examinees?examCode=${sel.value}`);
+    tbody.innerHTML='';
+    if(!data.examinees.length){tbody.innerHTML=`<tr><td colspan="2" style="text-align:center;color:var(--muted);padding:1rem">${t('no_examinees')}</td></tr>`;return;}
+    const results=await apiGet(`/api/admin/results?examCode=${sel.value}`).catch(()=>({data:[]}));
+    const resultMap={};(Array.isArray(results)?results:[]).forEach(r=>resultMap[r.examineeId]=r);
+    data.examinees.forEach(eid=>{
+      const res=resultMap[eid];
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td><code>${eid}</code></td><td>${res?`<span class="badge ${res.released?'badge-green':'badge-yellow'}">${res.released?t('status_published'):t('status_pending')}</span>`:`<span class="badge badge-grey">—</span>`}</td>`;
+      tbody.appendChild(tr);
+    });
+  } catch(e){console.error(e);}
+}
+
+// ─── RESULTS ───
+async function loadResults(){
+  const filterCode=document.getElementById('filter-exam')?.value||'';
+  const tbody=document.getElementById('results-body');if(!tbody)return;
+  try {
+    const path='/api/admin/results'+(filterCode?`?examCode=${filterCode}`:'');
+    const records=await apiGet(path);
+    tbody.innerHTML='';
+    document.getElementById('no-results-msg').style.display=records.length?'none':'block';
+    records.slice().reverse().forEach(r=>{
+      const exam=cachedExams.find(e=>e.code===r.examCode);
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td><code>${r.examineeId}</code></td><td><code>${r.examCode}</code></td><td><strong>${r.points}</strong> / 2500</td><td>${r.correct} / ${r.total}</td><td><span class="badge ${r.released?'badge-green':'badge-grey'}">${r.released?t('status_published'):t('status_pending')}</span></td><td style="font-size:.78rem;color:var(--muted)">${new Date(r.submittedAt).toLocaleString()}</td>`;
+      tbody.appendChild(tr);
+    });
+  } catch(e){console.error(e);}
+}
+
+// ─── PUBLISH ───
+async function loadPublish(){
+  const tbody=document.getElementById('publish-body');if(!tbody)return;
+  tbody.innerHTML='';
+  document.getElementById('no-publish-msg').style.display=cachedExams.length?'none':'block';
+  try {
+    const allResults=await apiGet('/api/admin/results');
+    cachedExams.forEach(exam=>{
+      const subs=allResults.filter(r=>r.examCode===exam.code);
+      const allReleased=subs.length>0&&subs.every(r=>r.released);
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${exam.title}</td><td><code>${exam.code}</code></td><td>${subs.length}</td><td><span class="badge ${allReleased?'badge-green':'badge-grey'}">${allReleased?t('status_published'):t('status_pending')}</span></td><td>${subs.length===0?`<span style="color:var(--muted);font-size:.8rem">—</span>`:allReleased?`<span style="color:var(--success);font-size:.8rem">✓</span>`:`<button class="btn btn-success btn-sm" onclick="publishExam('${exam.code}')">${t('btn_publish')}</button>`}</td>`;
+      tbody.appendChild(tr);
+    });
+  } catch(e){console.error(e);}
+}
+
+async function publishExam(code){
+  const exam=cachedExams.find(e=>e.code===code);
+  if(!confirm(`${t('btn_publish')}: ${exam?.title||code}?`)) return;
+  try {
+    await apiPost('/api/admin/results/publish',{examCode:code});
+    await loadPublish();await loadResults();
+  } catch(e){alert(e.message);}
+}
+
+// ─── SELECTS ───
+function populateExamSelects(){
+  ['assign-exam-sel','reg-exam-sel','examinees-filter-exam','filter-exam'].forEach(id=>{
+    const sel=document.getElementById(id);if(!sel)return;
+    const prev=sel.value;
+    const allOpt=id==='filter-exam'?`<option value="">${t('all_exams_option')}</option>`:`<option value="">${t('select_exam_first')}</option>`;
+    sel.innerHTML=allOpt;
+    cachedExams.forEach(e=>{const o=document.createElement('option');o.value=(id==='assign-exam-sel'?e.id:e.code);o.textContent=`${e.code} — ${e.title}`;sel.appendChild(o);});
+    if(prev) sel.value=prev;
+  });
+  const tsel=document.getElementById('assign-task-sel');
+  if(tsel){
+    const prev=tsel.value;
+    tsel.innerHTML=cachedTasks.length?'':'<option value="">—</option>';
+    cachedTasks.forEach((tk,i)=>{const o=document.createElement('option');o.value=tk.id;o.textContent=`#${i+1} [D${tk.difficulty}] ${tk.text.substring(0,38)}`;tsel.appendChild(o);});
+    if(prev) tsel.value=prev;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════════════
+function v(id){const el=document.getElementById(id);return el?el.value.trim():'';}
+function fmtTime(s){if(!s)return'—';if(s<60)return s+'s';return Math.floor(s/60)+'m '+s%60+'s';}
+function showErr(el,msg){el.style.display='flex';el.textContent=msg;}
+function setBtnLoading(id,on){const el=document.getElementById(id);if(!el)return;el.disabled=on;el.innerHTML=on?`<span class="spinner"></span> …`:t('btn_verify');}
+
+// ═══════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════
+initMcOpts();
+setLang('hu');
+</script>
+</body>
+</html>

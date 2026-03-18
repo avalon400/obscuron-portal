@@ -1,4 +1,4 @@
-import { json, err, uid, kvGet, kvSet, kvList, kvListAppend } from '../utils.js';
+import { json, err, uid, kvGet, kvSet, kvList, kvListAppend, kvListRemove } from '../utils.js';
 
 /** GET /api/admin/exams — list all exams with full detail */
 export async function list(request, env) {
@@ -97,4 +97,33 @@ export async function getForExaminee(request, env) {
     timeMins: exam.timeMins,
     tasks: sanitised,
   });
+}
+
+/** DELETE /api/admin/exams?code=X */
+export async function remove(request, env) {
+  const url  = new URL(request.url);
+  const code = (url.searchParams.get('code') || '').toUpperCase();
+  if (!code) return err(400, 'code query param required.');
+
+  const exam = await kvGet(env, `exam:${code}`);
+  if (!exam) return err(404, 'Examination not found.');
+
+  await env.CG_KV.delete(`exam:${code}`);
+  await kvListRemove(env, 'exams:list', code);
+
+  return json({ ok: true });
+}
+
+/** POST /api/admin/exams/removetask — remove a task from an exam */
+export async function removeTask(request, env) {
+  const { examCode, taskId } = await request.json();
+  if (!examCode || !taskId) return err(400, 'examCode and taskId required.');
+
+  const exam = await kvGet(env, `exam:${examCode.toUpperCase()}`);
+  if (!exam) return err(404, 'Examination not found.');
+
+  exam.taskIds = exam.taskIds.filter(id => id !== taskId);
+  await kvSet(env, `exam:${exam.code}`, exam);
+
+  return json({ ok: true, taskCount: exam.taskIds.length });
 }

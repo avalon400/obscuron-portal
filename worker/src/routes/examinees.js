@@ -65,3 +65,18 @@ export async function verify(request, env) {
     taskCount: exam.taskIds.length,
   });
 }
+
+/** DELETE /api/admin/examinees?examCode=X&examineeId=Y */
+export async function unregister(request, env) {
+  const url  = new URL(request.url);
+  const code = (url.searchParams.get('examCode') || '').toUpperCase();
+  const eid  = (url.searchParams.get('examineeId') || '').toUpperCase();
+  if (!code || !eid) return err(400, 'examCode and examineeId required.');
+
+  await env.CG_KV.delete(`examinee:${code}:${eid}`);
+
+  const ids = await kvList(env, `examinees:${code}`);
+  await kvSet(env, `examinees:${code}`, ids.filter(i => i !== eid));
+
+  return json({ ok: true });
+}

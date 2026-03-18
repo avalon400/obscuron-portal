@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KompetenciaKapu</title>
+<title>OVP Obscuron Vizsgaportál</title>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -184,12 +184,12 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
 <!-- ═══ SITE HEADER ═══ -->
 <div class="site-header">
   <div class="site-logo">
-    <div class="crest">CG</div>
-    <span data-i18n="site_title">KompetenciaKapu — Vizsgáztató Rendszer</span>
+    <div class="crest">OVP</div>
+    <span data-i18n="site_title">Obscuron Vizsgaportál</span>
   </div>
   <div class="header-right">
     <div class="header-meta" id="header-meta"></div>
-    <div class="lang-switcher">
+    <div class="lang-switcher" style="display:none">
       <button class="lang-btn active" onclick="setLang('hu')" id="lang-hu">HU</button>
       <button class="lang-btn" onclick="setLang('en')" id="lang-en">EN</button>
     </div>
@@ -441,7 +441,7 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
         </div>
         <div class="panel">
           <div class="panel-head"><h3 data-i18n="exam_list">Vizsgák listája</h3></div>
-          <div style="overflow-x:auto"><table class="data-table"><thead><tr><th data-i18n="th_code">Kód</th><th data-i18n="th_title">Megnevezés</th><th data-i18n="th_tasks">Feladatok</th><th data-i18n="th_time">Idő</th></tr></thead><tbody id="exam-list-body"></tbody></table></div>
+          <div style="overflow-x:auto"><table class="data-table"><thead><tr><th data-i18n="th_code">Kód</th><th data-i18n="th_title">Megnevezés</th><th data-i18n="th_tasks">Feladatok</th><th data-i18n="th_time">Idő</th><th></th></tr></thead><tbody id="exam-list-body"></tbody></table></div>
         </div>
       </div>
       <div class="panel" style="margin-top:1.4rem">
@@ -511,7 +511,7 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
             <span class="badge badge-blue" id="task-count-badge">0</span>
           </div>
           <div style="overflow-x:auto;max-height:520px;overflow-y:auto">
-            <table class="data-table"><thead><tr><th>#</th><th data-i18n="th_question">Kérdés</th><th data-i18n="th_type">Típus</th><th data-i18n="th_diff">Neh.</th><th data-i18n="th_pts">Pont</th></tr></thead><tbody id="task-bank-body"></tbody></table>
+            <table class="data-table"><thead><tr><th>#</th><th data-i18n="th_question">Kérdés</th><th data-i18n="th_type">Típus</th><th data-i18n="th_diff">Neh.</th><th data-i18n="th_pts">Pont</th><th></th></tr></thead><tbody id="task-bank-body"></tbody></table>
           </div>
         </div>
       </div>
@@ -524,7 +524,7 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
           <div class="panel-head"><h3 data-i18n="register_examinee">Vizsgázó regisztrálása</h3></div>
           <div class="panel-body">
             <div class="field"><label data-i18n="select_exam">Vizsga</label><select id="reg-exam-sel"></select></div>
-            <div class="field"><label data-i18n="examinee_id">Vizsgázói azonosító</label><input id="reg-eid" type="text" class="mono" maxlength="14" oninput="this.value=this.value.toUpperCase()" placeholder="pl. VZ-00001"></div>
+            <div class="field"><label data-i18n="examinee_id">Vizsgázói azonosító</label><div style="display:flex;gap:.5rem;align-items:center"><input id="reg-eid" type="text" class="mono" maxlength="16" oninput="this.value=this.value.toUpperCase()" placeholder="OVP-AB12345117"><button type="button" class="btn btn-secondary btn-sm" onclick="generateExamineeId()" title="Azonosító generálása">⟳ Generál</button></div></div>
             <div id="reg-msg" style="display:none;margin-top:.5rem"></div>
           </div>
           <div class="panel-foot"><button class="btn btn-primary" onclick="adminRegisterExaminee()" data-i18n="btn_register">Regisztrálás</button></div>
@@ -532,10 +532,14 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
         <div class="panel">
           <div class="panel-head" style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap">
             <h3 data-i18n="registered_examinees">Regisztrált vizsgázók</h3>
-            <select id="examinees-filter-exam" style="padding:.35rem .65rem;border:1px solid var(--rule);border-radius:var(--r);font-size:.83rem" onchange="loadExaminees()"></select>
+            <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+              <select id="examinees-filter-exam" style="padding:.35rem .65rem;border:1px solid var(--rule);border-radius:var(--r);font-size:.83rem" onchange="loadExaminees()"></select>
+              <button class="btn btn-secondary btn-sm" onclick="exportExamineesExcel()">⬇ Excel</button>
+              <button class="btn btn-secondary btn-sm" onclick="exportExamineesPDF()">⬇ PDF</button>
+            </div>
           </div>
           <div style="overflow-x:auto;max-height:400px;overflow-y:auto">
-            <table class="data-table"><thead><tr><th data-i18n="examinee_id">Azonosító</th><th data-i18n="th_status">Állapot</th></tr></thead><tbody id="examinees-body"></tbody></table>
+            <table class="data-table"><thead><tr><th data-i18n="examinee_id">Azonosító</th><th data-i18n="th_status">Állapot</th><th></th></tr></thead><tbody id="examinees-body"></tbody></table>
           </div>
         </div>
       </div>
@@ -549,6 +553,8 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
           <div style="display:flex;gap:.5rem;align-items:center">
             <select id="filter-exam" style="padding:.35rem .65rem;border:1px solid var(--rule);border-radius:var(--r);font-size:.83rem" onchange="loadResults()"></select>
             <button class="btn btn-secondary btn-sm" onclick="loadResults()" data-i18n="btn_refresh">↻ Frissítés</button>
+            <button class="btn btn-secondary btn-sm" onclick="exportResultsExcel()" title="Export Excel">⬇ Excel</button>
+            <button class="btn btn-secondary btn-sm" onclick="exportResultsPDF()" title="Export PDF">⬇ PDF</button>
           </div>
         </div>
         <div style="overflow-x:auto">
@@ -581,185 +587,19 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
   </div>
 </div>
 
+<script src="translations.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════
 //  CONFIG — set this to your Cloudflare Worker URL after deploy
 // ═══════════════════════════════════════════════════════════════
-const API = 'https://competencegate.YOUR-SUBDOMAIN.workers.dev';
+const API = 'https://obscuronportal-worker.nagybeni0204.workers.dev';
 
 // ═══════════════════════════════════════════════════════════════
 //  i18n
 // ═══════════════════════════════════════════════════════════════
 let LANG = 'hu';
 
-const T = {
-  hu: {
-    site_title:'KompetenciaKapu — Vizsgáztató Rendszer',
-    welcome_title:'KompetenciaKapu',
-    welcome_sub:'Hivatalos Kompetencia Vizsgáztató Platform',
-    welcome_desc:'Adja meg vizsgaazonosítóját a vizsga megkezdéséhez, vagy lépjen be az adminisztrátori felületre.',
-    btn_start_exam:'Vizsga megkezdése',btn_view_result:'Eredmény megtekintése',btn_admin:'Adminisztrátor',
-    login_title:'Vizsgázó azonosítása',login_sub:'Adja meg intézménye által kiadott vizsgakódot és vizsgázói azonosítót.',
-    login_info:'Az azonosítókat a vizsgáztató intézmény bocsátja ki. Probléma esetén forduljon a felügyelőhöz.',
-    exam_code:'Vizsgakód',exam_code_hint:'A vizsgáztatói kör által kiadott egyedi kód.',exam_code_hint2:'Egyedi. Vizsgázókkal megosztandó.',
-    examinee_id:'Vizsgázói azonosító',examinee_id_hint:'Az intézmény által kiadott személyes azonosító.',
-    btn_back:'← Vissza',btn_verify:'Ellenőrzés és folytatás →',
-    instructions_heading:'Útmutató',
-    instr_items:['Figyelmesen olvassa el az összes kérdést, mielőtt válaszol.','A feleletválasztós kérdéseknél válassza a legjobb választ.','Az időmérő a <strong>Vizsga megkezdése</strong> gombra kattintva indul, és nem szüneteltethető.','A vizsga automatikusan beadásra kerül, ha lejár az idő.','Az alsó navigációs pontok segítségével szabadon mozoghat a kérdések között.','A kompetenciapontszám az egyes feladatok nehézségi fokán alapul.','<strong>Az eredményeket az adminisztrátor teszi közzé egy későbbi időpontban.</strong>'],
-    instr_warn:'Ne zárja be és ne frissítse az oldalt a vizsga közben. Az előrehaladás nem állítható vissza.',
-    btn_begin:'Vizsga megkezdése →',
-    questions:'Kérdések',minutes:'Perc',max_points:'Max. pont',
-    btn_submit:'Beadás',btn_prev:'← Előző',btn_next:'Következő →',
-    q_of:'/ kérdés',answered_pct:'megválaszolva',
-    difficulty_label:'Nehézség',diff_levels:['','Minimális','Alap','Közepes','Standard','Haladó','Szakértői','Mester'],
-    confirm_submit_partial:'%d kérdés megválaszolatlan. Biztosan be szeretné adni a vizsgát?',
-    submitted_title:'Vizsga beadva',
-    submitted_msg:'Válaszai rögzítve lettek. Az eredményeket az adminisztrátor teszi közzé. Amint elérhetővé válnak, az alábbi azonosítóval tekintheti meg őket.',
-    btn_home:'← Főoldal',
-    lookup_title:'Eredmény lekérdezése',lookup_sub:'Adja meg azonosítóit a közzétett eredmény megtekintéséhez.',
-    btn_lookup:'Eredmény megtekintése →',
-    result_title:'Vizsga eredménye',
-    competence_points:'Kompetenciapontok',out_of_2500:'2500-ból',
-    correct:'Helyes',incorrect:'Helytelen',time_used:'Felhasznált idő',
-    question_review:'Kérdések áttekintése',
-    grade_outstanding:'Kiváló',grade_excellent:'Jeles',grade_proficient:'Jó',grade_developing:'Közepes',grade_beginning:'Kezdő',
-    msg_outstanding:'Kiemelkedő teljesítmény. Mesterfokú tudást mutatott ezen a vizsgán.',
-    msg_excellent:'Kiváló eredmény. Magas szintű kompetenciát mutatott ezen a területen.',
-    msg_proficient:'Jó eredmény. A várt szintet meghaladó teljesítmény.',
-    msg_developing:'Fejlődő kompetencia. Javaslunk további tanulást ezen a területen.',
-    msg_beginning:'További tanulás szükséges. Kérjük, tekintse át a tananyagot.',
-    your_answer:'Az Ön válasza',correct_answer:'Helyes válasz',
-    admin_login_title:'Adminisztrátori hozzáférés',admin_login_sub:'Korlátozott hozzáférés — kizárólag jogosult személyek számára.',
-    admin_password:'Adminisztrátori jelszó',btn_enter:'Belépés →',
-    admin_panel_title:'Adminisztrátori panel',admin_panel_sub:'Vizsgák, feladatbank, eredmények és közzétételek kezelése.',
-    btn_exit:'← Kilépés',
-    tab_exams:'Vizsgák',tab_tasks:'Feladatbank',tab_examinees:'Vizsgázók',tab_results:'Eredmények',tab_publish:'Közzététel',
-    create_exam:'Vizsga létrehozása',exam_title:'Vizsga megnevezése',category:'Kategória',time_limit:'Időkorlát (perc)',description:'Leírás',
-    btn_create_exam:'Vizsga létrehozása',
-    exam_list:'Vizsgák listája',th_code:'Kód',th_title:'Megnevezés',th_tasks:'Feladatok',th_time:'Idő',
-    assign_task:'Feladat hozzárendelése vizsgához',select_exam:'Vizsga kiválasztása',select_task:'Feladat kiválasztása',btn_assign:'Hozzárendelés',
-    add_task:'Feladat hozzáadása a bankhoz',question_text:'Kérdés szövege',question_type:'Kérdéstípus',
-    type_mc:'Feleletválasztós',type_text:'Rövid válasz',type_order:'Sorbarendezés',type_match:'Párosítás',
-    difficulty:'Nehézség (1–7)',
-    diff_1:'1 — Minimális',diff_2:'2 — Alap',diff_3:'3 — Közepes',diff_4:'4 — Standard',diff_5:'5 — Haladó',diff_6:'6 — Szakértői',diff_7:'7 — Mester',
-    options_label:'Válaszlehetőségek (jelölje meg a helyeset)',btn_add_option:'+ Lehetőség hozzáadása',
-    keywords_label:'Elfogadott kulcsszavak (vesszővel elválasztva)',
-    order_items_label:'Elemek helyes sorrendben (soronként egy)',
-    match_pairs_label:'Párok — formátum "Bal | Jobb" (soronként egy)',
-    btn_save_task:'Mentés a feladatbankba',
-    task_bank:'Feladatbank',th_question:'Kérdés',th_type:'Típus',th_diff:'Neh.',th_pts:'Pont',
-    register_examinee:'Vizsgázó regisztrálása',btn_register:'Regisztrálás',
-    registered_examinees:'Regisztrált vizsgázók',th_status:'Állapot',
-    all_results:'Összes eredmény',th_points:'Pontszám',th_correct:'Helyes',th_submitted:'Beadva',btn_refresh:'↻ Frissítés',
-    no_results:'Még nincsenek eredmények.',
-    publish_results:'Eredmények közzététele',
-    publish_warn:'A közzététel után minden regisztrált vizsgázó megtekintheti saját eredményét. Ez a művelet nem vonható vissza.',
-    th_submissions:'Beadások',th_action:'Művelet',no_exams:'Még nincsenek vizsgák.',
-    btn_publish:'Közzétesz',status_published:'Közzétett',status_pending:'Függőben',
-    err_fill_required:'Kérjük, töltse ki az összes kötelező mezőt.',
-    err_code_exists:'Ilyen kódú vizsga már létezik.',
-    err_no_exam:'A vizsgakód nem ismert.',err_no_examinee:'Ez az azonosító nem regisztrált erre a vizsgára.',
-    err_already_submitted:'Ezt a vizsgát már beadta.',err_not_released:'Az eredmények még nem kerültek közzétételre.',
-    err_no_result:'Nem található eredmény ezekkel az azonosítókkal.',
-    err_task_required:'A kérdés szövege kötelező.',err_min_options:'Legalább 2 válaszlehetőség szükséges.',
-    err_mark_correct:'Jelölje meg a helyes választ.',err_keywords:'Adjon meg legalább egy kulcsszót.',
-    err_order_items:'Legalább 2 elem szükséges.',err_match_pairs:'Legalább 2 pár szükséges, "Bal | Jobb" formátumban.',
-    err_register_required:'Adjon meg egy vizsgát és vizsgázói azonosítót.',
-    err_already_registered:'Ez az azonosító már regisztrálva van erre a vizsgára.',
-    success_task_assigned:'Feladat sikeresen hozzárendelve.',
-    success_examinee_registered:'Vizsgázó sikeresen regisztrálva.',
-    network_error:'Hálózati hiba. Ellenőrizze a kapcsolatot.',
-    all_exams_option:'Összes vizsga',
-    select_exam_first:'— Válasszon vizsgát —',
-    min_placeholder:'perc',
-    no_tasks:'Még nincsenek feladatok.',
-    no_examinees:'Nincs regisztrált vizsgázó.',
-    task_already_assigned:'Ez a feladat már hozzá van rendelve ehhez a vizsgához.',
-  },
-  en: {
-    site_title:'CompetenceGate — Examination System',
-    welcome_title:'CompetenceGate',
-    welcome_sub:'Official Competence Examination Platform',
-    welcome_desc:'Enter your examination credentials to begin, or access the administrator panel.',
-    btn_start_exam:'Start Examination',btn_view_result:'View My Result',btn_admin:'Administrator',
-    login_title:'Examinee Identification',login_sub:'Enter the examination code and examinee ID issued by your institution.',
-    login_info:'Your credentials were issued by the examination authority. Contact your invigilator if you have not received them.',
-    exam_code:'Examination Code',exam_code_hint:'A unique code issued per examination session.',exam_code_hint2:'Unique. Share with examinees.',
-    examinee_id:'Examinee ID',examinee_id_hint:'Your personal identifier assigned by the authority.',
-    btn_back:'← Back',btn_verify:'Verify & Continue →',
-    instructions_heading:'Instructions',
-    instr_items:['Read each question carefully before answering.','For multiple-choice questions, select the single best answer.','The timer begins when you press <strong>Begin Examination</strong> and cannot be paused.','The examination is submitted automatically when time expires.','You may navigate freely between questions using the dot panel at the bottom.','Your competence score is based on the difficulty rating of each task.','<strong>Results will be released by the administrator at a later date.</strong>'],
-    instr_warn:'Do not close or refresh the browser during the examination. Your progress cannot be recovered.',
-    btn_begin:'Begin Examination →',
-    questions:'Questions',minutes:'Minutes',max_points:'Max Points',
-    btn_submit:'Submit',btn_prev:'← Previous',btn_next:'Next →',
-    q_of:'of',answered_pct:'answered',
-    difficulty_label:'Difficulty',diff_levels:['','Minimal','Basic','Moderate','Standard','Advanced','Expert','Mastery'],
-    confirm_submit_partial:'You have %d unanswered question(s). Submit anyway?',
-    submitted_title:'Examination Submitted',
-    submitted_msg:'Your responses have been recorded. Results will be released by the administrator. Once available, use the reference below to view your results.',
-    btn_home:'← Home',
-    lookup_title:'Result Lookup',lookup_sub:'Enter your credentials to view your published result.',
-    btn_lookup:'View Result →',
-    result_title:'Examination Result',
-    competence_points:'Competence Points',out_of_2500:'out of 2500',
-    correct:'Correct',incorrect:'Incorrect',time_used:'Time Used',
-    question_review:'Question Review',
-    grade_outstanding:'Outstanding',grade_excellent:'Excellent',grade_proficient:'Proficient',grade_developing:'Developing',grade_beginning:'Beginning',
-    msg_outstanding:'Exceptional performance. You have demonstrated mastery of this examination.',
-    msg_excellent:'Excellent result. You show a high level of competence in this area.',
-    msg_proficient:'Good result. You are above the expected standard.',
-    msg_developing:'You are developing competence. Continued study is recommended.',
-    msg_beginning:'Further study is needed. Please review the learning materials.',
-    your_answer:'Your answer',correct_answer:'Correct answer',
-    admin_login_title:'Administrator Access',admin_login_sub:'Restricted — authorised personnel only.',
-    admin_password:'Administrator Password',btn_enter:'Access Panel →',
-    admin_panel_title:'Administration Panel',admin_panel_sub:'Manage examinations, task bank, results, and publication.',
-    btn_exit:'← Exit',
-    tab_exams:'Examinations',tab_tasks:'Task Bank',tab_examinees:'Examinees',tab_results:'Results',tab_publish:'Publish',
-    create_exam:'Create Examination',exam_title:'Examination Title',category:'Category',time_limit:'Time Limit (min)',description:'Description',
-    btn_create_exam:'Create Examination',
-    exam_list:'Examination List',th_code:'Code',th_title:'Title',th_tasks:'Tasks',th_time:'Time',
-    assign_task:'Assign Task to Examination',select_exam:'Select Examination',select_task:'Select Task',btn_assign:'Assign',
-    add_task:'Add Task to Bank',question_text:'Question Text',question_type:'Question Type',
-    type_mc:'Multiple Choice',type_text:'Short Answer',type_order:'Ordering',type_match:'Matching',
-    difficulty:'Difficulty (1–7)',
-    diff_1:'1 — Minimal',diff_2:'2 — Basic',diff_3:'3 — Moderate',diff_4:'4 — Standard',diff_5:'5 — Advanced',diff_6:'6 — Expert',diff_7:'7 — Mastery',
-    options_label:'Options (mark the correct one)',btn_add_option:'+ Add Option',
-    keywords_label:'Accepted keywords (comma-separated)',
-    order_items_label:'Items in correct order (one per line)',
-    match_pairs_label:'Pairs — format "Left | Right" (one per line)',
-    btn_save_task:'Save to Task Bank',
-    task_bank:'Task Bank',th_question:'Question',th_type:'Type',th_diff:'Diff.',th_pts:'Points',
-    register_examinee:'Register Examinee',btn_register:'Register',
-    registered_examinees:'Registered Examinees',th_status:'Status',
-    all_results:'All Results',th_points:'Score',th_correct:'Correct',th_submitted:'Submitted',btn_refresh:'↻ Refresh',
-    no_results:'No results yet.',
-    publish_results:'Publish Results',
-    publish_warn:'Once published, all examinees can view their individual scores. This action cannot be undone.',
-    th_submissions:'Submissions',th_action:'Action',no_exams:'No examinations yet.',
-    btn_publish:'Publish',status_published:'Published',status_pending:'Pending',
-    err_fill_required:'Please fill in all required fields.',
-    err_code_exists:'An examination with that code already exists.',
-    err_no_exam:'Examination code not recognised.',err_no_examinee:'Examinee ID not registered for this examination.',
-    err_already_submitted:'This examination has already been submitted.',err_not_released:'Results have not yet been released.',
-    err_no_result:'No result found for these credentials.',
-    err_task_required:'Question text is required.',err_min_options:'At least 2 options are required.',
-    err_mark_correct:'Please mark the correct answer.',err_keywords:'Provide at least one keyword.',
-    err_order_items:'At least 2 items are required.',err_match_pairs:'At least 2 pairs required in "Left | Right" format.',
-    err_register_required:'Please select an exam and enter an examinee ID.',
-    err_already_registered:'This ID is already registered for this examination.',
-    success_task_assigned:'Task successfully assigned.',
-    success_examinee_registered:'Examinee successfully registered.',
-    network_error:'Network error. Please check your connection.',
-    all_exams_option:'All examinations',
-    select_exam_first:'— Select examination —',
-    min_placeholder:'min',
-    no_tasks:'No tasks yet.',
-    no_examinees:'No registered examinees.',
-    task_already_assigned:'This task is already assigned to this examination.',
-  }
-};
+// translations loaded from translations.js
 
 function t(key) { return (T[LANG] && T[LANG][key]) || (T.hu[key]) || key; }
 
@@ -1081,13 +921,21 @@ async function doAdminLogin() {
 
 async function refreshAdminData() {
   try {
-    [cachedExams, cachedTasks] = await Promise.all([apiGet('/api/admin/exams'), apiGet('/api/admin/tasks')]);
-    renderExamList();
-    renderTaskBank();
-    populateExamSelects();
-    loadResults();
-    loadPublish();
-  } catch(e) { console.error(e); }
+    const [exams, tasks] = await Promise.all([
+      apiGet('/api/admin/exams').catch(e => { console.error('exams fetch failed:', e); return []; }),
+      apiGet('/api/admin/tasks').catch(e => { console.error('tasks fetch failed:', e); return []; }),
+    ]);
+    cachedExams = Array.isArray(exams) ? exams : [];
+    cachedTasks = Array.isArray(tasks) ? tasks : [];
+  } catch(e) {
+    console.error('refreshAdminData failed:', e);
+    cachedExams = []; cachedTasks = [];
+  }
+  renderExamList();
+  renderTaskBank();
+  populateExamSelects();
+  loadResults().catch(e => console.error('loadResults failed:', e));
+  loadPublish().catch(e => console.error('loadPublish failed:', e));
 }
 
 // ─── EXAMS ───
@@ -1096,11 +944,10 @@ async function adminCreateExam() {
   const errEl=document.getElementById('ex-err');errEl.style.display='none';
   if(!title||!code||!timeMins){showErr(errEl,t('err_fill_required'));return;}
   try {
-    const exam=await apiPost('/api/admin/exams',{title,category:cat,code,timeMins,desc});
-    cachedExams.push(exam);
+    await apiPost('/api/admin/exams',{title,category:cat,code,timeMins,desc});
     ['ex-title','ex-cat','ex-code','ex-time','ex-desc'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-    renderExamList(); populateExamSelects(); loadPublish();
-  } catch(e){showErr(errEl,e.message);}
+    await refreshAdminData();
+  } catch(e){ showErr(errEl,e.message); }
 }
 
 function renderExamList() {
@@ -1108,9 +955,22 @@ function renderExamList() {
   tbody.innerHTML='';
   if(!cachedExams.length){tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:1.5rem">${t('no_exams')}</td></tr>`;return;}
   cachedExams.forEach(e=>{
+    const examTasks = e.taskIds.map(id=>cachedTasks.find(tk=>tk.id===id)).filter(Boolean);
+    const totalWeight = examTasks.reduce((s,tk)=>s+DIFF_WEIGHT[tk.difficulty],0);
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td><code style="font-size:.8rem">${e.code}</code></td><td>${e.title}</td><td>${e.taskIds.length}</td><td>${e.timeMins} ${t('min_placeholder')}</td>`;
+    tr.style.cursor='pointer';
+    tr.innerHTML=`<td><code style="font-size:.8rem">${e.code}</code></td><td>${e.title}</td><td>${e.taskIds.length}</td><td>${e.timeMins} ${t('min_placeholder')}</td><td><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteExam('${e.code}')">✕</button></td>`;
     tbody.appendChild(tr);
+    // Task detail row (collapsed by default)
+    if (examTasks.length > 0) {
+      const detailRow = document.createElement('tr');
+      detailRow.id = 'exam-detail-'+e.code;
+      detailRow.style.display = 'none';
+      const taskList = examTasks.map(tk=>`<span style="display:inline-flex;align-items:center;gap:.3rem;background:var(--off);border:1px solid var(--rule);border-radius:var(--r);padding:.2rem .5rem;font-size:.78rem;margin:.15rem">${tk.text.substring(0,30)}… <button onclick="removeTaskFromExam('${e.code}','${tk.id}')" style="background:none;border:none;cursor:pointer;color:var(--danger);font-size:.9rem;padding:0">✕</button></span>`).join('');
+      detailRow.innerHTML=`<td colspan="5" style="background:var(--off);padding:.6rem 1rem">${taskList}</td>`;
+      tbody.appendChild(detailRow);
+      tr.onclick = ()=>{ const d=document.getElementById('exam-detail-'+e.code); d.style.display=d.style.display==='none'?'':'none'; };
+    }
   });
 }
 
@@ -1194,9 +1054,9 @@ function renderTaskBank(){
   tbody.innerHTML='';
   if(!cachedTasks.length){tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem">${t('no_tasks')}</td></tr>`;return;}
   cachedTasks.forEach((tk,i)=>{
-    const pts=Math.round(DIFF_WEIGHT[tk.difficulty]/DIFF_WEIGHT[7]*2500);
+    const pts=taskPoints(tk);
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td style="color:var(--muted)">${i+1}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${tk.text}</td><td><span class="badge badge-blue">${tk.type.toUpperCase()}</span></td><td>${tk.difficulty}</td><td>${pts}</td>`;
+    tr.innerHTML=`<td style="color:var(--muted)">${i+1}</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${tk.text}</td><td><span class="badge badge-blue">${tk.type.toUpperCase()}</span></td><td>${tk.difficulty}</td><td>${pts}</td><td style="white-space:nowrap"><button class="btn btn-secondary btn-sm" onclick="viewEditTask('${tk.id}')">✎</button> <button class="btn btn-danger btn-sm" onclick="deleteTask('${tk.id}')">✕</button></td>`;
     tbody.appendChild(tr);
   });
   const badge=document.getElementById('task-count-badge');
@@ -1230,7 +1090,7 @@ async function loadExaminees(){
     data.examinees.forEach(eid=>{
       const res=resultMap[eid];
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td><code>${eid}</code></td><td>${res?`<span class="badge ${res.released?'badge-green':'badge-yellow'}">${res.released?t('status_published'):t('status_pending')}</span>`:`<span class="badge badge-grey">—</span>`}</td>`;
+      tr.innerHTML=`<td><code>${eid}</code></td><td>${res?`<span class="badge ${res.released?'badge-green':'badge-yellow'}">${res.released?t('status_published'):t('status_pending')}</span>`:`<span class="badge badge-grey">—</span>`}</td><td><button class="btn btn-danger btn-sm" onclick="unregisterExaminee('${sel.value}','${eid}')">✕</button></td>`;
       tbody.appendChild(tr);
     });
   } catch(e){console.error(e);}
@@ -1242,10 +1102,11 @@ async function loadResults(){
   const tbody=document.getElementById('results-body');if(!tbody)return;
   try {
     const path='/api/admin/results'+(filterCode?`?examCode=${filterCode}`:'');
-    const records=await apiGet(path);
+    const raw=await apiGet(path);
+    const records=Array.isArray(raw)?raw:[];
     tbody.innerHTML='';
     document.getElementById('no-results-msg').style.display=records.length?'none':'block';
-    records.slice().reverse().forEach(r=>{
+    records.slice().sort((a,b)=>a.examCode.localeCompare(b.examCode)).forEach(r=>{
       const exam=cachedExams.find(e=>e.code===r.examCode);
       const tr=document.createElement('tr');
       tr.innerHTML=`<td><code>${r.examineeId}</code></td><td><code>${r.examCode}</code></td><td><strong>${r.points}</strong> / 2500</td><td>${r.correct} / ${r.total}</td><td><span class="badge ${r.released?'badge-green':'badge-grey'}">${r.released?t('status_published'):t('status_pending')}</span></td><td style="font-size:.78rem;color:var(--muted)">${new Date(r.submittedAt).toLocaleString()}</td>`;
@@ -1258,9 +1119,11 @@ async function loadResults(){
 async function loadPublish(){
   const tbody=document.getElementById('publish-body');if(!tbody)return;
   tbody.innerHTML='';
+  if(!Array.isArray(cachedExams)) cachedExams=[];
   document.getElementById('no-publish-msg').style.display=cachedExams.length?'none':'block';
   try {
-    const allResults=await apiGet('/api/admin/results');
+    const rawResults=await apiGet('/api/admin/results');
+    const allResults=Array.isArray(rawResults)?rawResults:[];
     cachedExams.forEach(exam=>{
       const subs=allResults.filter(r=>r.examCode===exam.code);
       const allReleased=subs.length>0&&subs.every(r=>r.released);
@@ -1306,6 +1169,469 @@ function v(id){const el=document.getElementById(id);return el?el.value.trim():''
 function fmtTime(s){if(!s)return'—';if(s<60)return s+'s';return Math.floor(s/60)+'m '+s%60+'s';}
 function showErr(el,msg){el.style.display='flex';el.textContent=msg;}
 function setBtnLoading(id,on){const el=document.getElementById(id);if(!el)return;el.disabled=on;el.innerHTML=on?`<span class="spinner"></span> …`:t('btn_verify');}
+
+// ═══════════════════════════════════════════════════════════════
+//  EXAMINEE ID GENERATOR
+// ═══════════════════════════════════════════════════════════════
+function generateExamineeId() {
+  const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // no I or O to avoid confusion
+  const ll = letters[Math.floor(Math.random()*letters.length)] +
+             letters[Math.floor(Math.random()*letters.length)];
+  const nnnnn = String(Math.floor(Math.random()*90000)+10000); // 5 digits, 10000-99999
+  const id = `OVP-${ll}${nnnnn}117`;
+  document.getElementById('reg-eid').value = id;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  EXPORT HELPERS
+// ═══════════════════════════════════════════════════════════════
+
+function getGradeLabel(points) {
+  if (points >= 2200) return t('grade_outstanding');
+  if (points >= 1800) return t('grade_excellent');
+  if (points >= 1400) return t('grade_proficient');
+  if (points >= 900)  return t('grade_developing');
+  return t('grade_beginning');
+}
+
+function formatTime(seconds) {
+  if (!seconds && seconds !== 0) return '—';
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+async function fetchAllResultsForExport() {
+  const filterCode = document.getElementById('filter-exam')?.value || '';
+  const path = '/api/admin/results' + (filterCode ? `?examCode=${filterCode}` : '');
+  return await apiGet(path);
+}
+
+// ─── EXCEL EXPORT ───
+async function exportResultsExcel() {
+  if (typeof XLSX === 'undefined') {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    document.head.appendChild(s);
+    await new Promise(res => s.onload = res);
+  }
+  const records = await fetchAllResultsForExport();
+  if (!records.length) { alert('Nincsenek exportálható eredmények.'); return; }
+
+  records.sort((a,b)=>a.examCode.localeCompare(b.examCode));
+  const rows = records.map(r => ({
+    'Vizsgakód':          r.examCode,
+    'Vizsgázói azonosító': r.examineeId,
+    'Pontszám (/ 2500)':  r.points,
+    'Minősítés':          getGradeLabel(r.points),
+    'Felhasznált idő':    formatTime(r.timeUsed),
+    'Állapot':            r.released ? t('status_published') : t('status_pending'),
+    'Beadva':             new Date(r.submittedAt).toLocaleString(),
+  }));
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(rows);
+
+  // Column widths
+  ws['!cols'] = [18,22,18,16,14,14,20].map(w => ({ wch: w }));
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Eredmények');
+  XLSX.writeFile(wb, `obscuron-eredmenyek-${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+// ─── PDF EXPORT ───
+async function exportResultsPDF() {
+  if (typeof window.jspdf === 'undefined') {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    document.head.appendChild(s);
+    await new Promise(res => s.onload = res);
+  }
+  if (typeof window.jspdf.jsPDF === 'undefined') {
+    alert('PDF könyvtár betöltése sikertelen.'); return;
+  }
+  const records = await fetchAllResultsForExport();
+  if (!records.length) { alert('Nincsenek exportálható eredmények.'); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  // Use built-in latin encoding to handle ő, ű, á etc.
+  doc.setLanguage('hu');
+  records.sort((a,b)=>a.examCode.localeCompare(b.examCode));
+
+  // Header
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.text('Obscuron Vizsgaportál — Eredménylista', 14, 16);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.text(`Exportálva: ${new Date().toLocaleString()}`, 14, 22);
+
+  // Table headers
+  const headers = ['Vizsgakód', 'Vizsgázói azonosító', 'Pontszám', 'Minősítés', 'Idő', 'Állapot', 'Beadva'];
+  const colX    = [14, 50, 95, 117, 145, 165, 190];
+  const colW    = [34, 43, 20, 26,  18,  23,  50];
+
+  let y = 32;
+  doc.setFillColor(27, 79, 138);
+  doc.rect(14, y - 5, 269, 8, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  headers.forEach((h, i) => doc.text(h, colX[i] + 1, y));
+
+  // Rows
+  doc.setFont('helvetica', 'normal');
+  records.forEach((r, idx) => {
+    y += 8;
+    if (y > 190) { doc.addPage(); y = 20; }
+    doc.setFillColor(idx % 2 === 0 ? 240 : 255, idx % 2 === 0 ? 244 : 255, idx % 2 === 0 ? 250 : 255);
+    doc.rect(14, y - 5, 269, 8, 'F');
+    doc.setTextColor(30, 30, 30);
+    const row = [
+      r.examCode,
+      r.examineeId,
+      `${r.points} / 2500`,
+      getGradeLabel(r.points),
+      formatTime(r.timeUsed),
+      r.released ? 'Közzétett' : 'Függőben',
+      new Date(r.submittedAt).toLocaleString(),
+    ];
+    row.forEach((cell, i) => {
+      const text = String(cell);
+      doc.text(text.length > 22 ? text.slice(0,21)+'…' : text, colX[i] + 1, y);
+    });
+  });
+
+  doc.setFontSize(7);
+  doc.setTextColor(150);
+  doc.text(`${records.length} rekord`, 14, y + 10);
+
+  doc.save(`obscuron-eredmenyek-${new Date().toISOString().slice(0,10)}.pdf`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DYNAMIC SCORING
+// ═══════════════════════════════════════════════════════════════
+// Points per task = (difficulty_weight / total_weight_of_all_exam_tasks) * 2500
+// For task bank display we show the raw weight-based value assuming solo task.
+function taskPoints(task, allTasks) {
+  if (!allTasks || allTasks.length === 0) {
+    // Standalone display: show weight relative to max difficulty
+    return Math.round((DIFF_WEIGHT[task.difficulty] / DIFF_WEIGHT[7]) * 2500);
+  }
+  const totalWeight = allTasks.reduce((s, t) => s + DIFF_WEIGHT[t.difficulty], 0);
+  if (totalWeight === 0) return 0;
+  return Math.round((DIFF_WEIGHT[task.difficulty] / totalWeight) * 2500);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DELETE EXAM
+// ═══════════════════════════════════════════════════════════════
+async function deleteExam(code) {
+  if (!confirm(`Biztosan törli a(z) "${code}" vizsgát? Ez nem vonható vissza.`)) return;
+  try {
+    await apiDelete(`/api/admin/exams?code=${code}`);
+    await refreshAdminData();
+  } catch(e) { alert(e.message); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  REMOVE TASK FROM EXAM
+// ═══════════════════════════════════════════════════════════════
+async function removeTaskFromExam(examCode, taskId) {
+  if (!confirm('Biztosan eltávolítja ezt a feladatot a vizsgából?')) return;
+  try {
+    await apiPost('/api/admin/exams/removetask', { examCode, taskId });
+    await refreshAdminData();
+  } catch(e) { alert(e.message); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  UNREGISTER EXAMINEE
+// ═══════════════════════════════════════════════════════════════
+async function unregisterExaminee(examCode, eid) {
+  if (!confirm(`Biztosan törli a(z) "${eid}" vizsgázót?`)) return;
+  try {
+    await apiDelete(`/api/admin/examinees?examCode=${examCode}&examineeId=${eid}`);
+    loadExaminees();
+  } catch(e) { alert(e.message); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  VIEW / EDIT TASK MODAL
+// ═══════════════════════════════════════════════════════════════
+function viewEditTask(taskId) {
+  const tk = cachedTasks.find(t => t.id === taskId);
+  if (!tk) return;
+
+  const typeLabels = { mc: 'Feleletválasztós', text: 'Rövid válasz', order: 'Sorbarendezés', match: 'Párosítás' };
+
+  // Build modal shell
+  const modal = document.createElement('div');
+  modal.id = 'task-edit-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem';
+
+  const box = document.createElement('div');
+  box.style.cssText = 'background:var(--white);border-radius:var(--r);width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18)';
+
+  // Header
+  box.innerHTML = `
+    <div style="padding:1.2rem 1.5rem;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center">
+      <h3 style="margin:0;font-size:1rem">Feladat szerkesztése</h3>
+      <button onclick="document.getElementById('task-edit-modal').remove()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--muted)">✕</button>
+    </div>`;
+
+  // Body
+  const body = document.createElement('div');
+  body.style.cssText = 'padding:1.2rem 1.5rem';
+
+  // Question text
+  const textArea = document.createElement('textarea');
+  textArea.id = 'edit-task-text';
+  textArea.rows = 3;
+  textArea.style.cssText = 'width:100%;padding:.4rem .6rem;border:1px solid var(--rule);border-radius:var(--r)';
+  textArea.value = tk.text;
+  const textField = document.createElement('div');
+  textField.className = 'field';
+  textField.innerHTML = '<label>Kérdés szövege</label>';
+  textField.appendChild(textArea);
+  body.appendChild(textField);
+
+  // Type + difficulty row
+  const metaRow = document.createElement('div');
+  metaRow.className = 'field';
+  metaRow.style.display = 'flex';
+  metaRow.style.gap = '1rem';
+  const diffInput = document.createElement('input');
+  diffInput.type = 'number'; diffInput.id = 'edit-task-diff';
+  diffInput.min = 1; diffInput.max = 7; diffInput.value = tk.difficulty;
+  diffInput.style.cssText = 'width:100%;padding:.4rem .6rem;border:1px solid var(--rule);border-radius:var(--r)';
+  metaRow.innerHTML = `<div style="flex:1"><label>Típus</label><div style="padding:.4rem 0;font-weight:600">${typeLabels[tk.type]||tk.type}</div></div><div style="flex:1"><label>Nehézség (1–7)</label></div>`;
+  metaRow.querySelector('div:last-child').appendChild(diffInput);
+  body.appendChild(metaRow);
+
+  // Answer section
+  const ansField = document.createElement('div');
+  ansField.className = 'field';
+  ansField.innerHTML = `<label>Válasz${tk.type==='mc'?' (jelölje meg a helyeset)':''}</label>`;
+
+  if (tk.type === 'mc') {
+    tk.options.forEach((opt, i) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'padding:.3rem 0;display:flex;align-items:center;gap:.5rem';
+      const radio = document.createElement('input');
+      radio.type = 'radio'; radio.name = 'edit-mc'; radio.value = i;
+      radio.id = `edit-opt-${i}`;
+      if (i === tk.correctIdx) radio.checked = true;
+      const inp = document.createElement('input');
+      inp.type = 'text'; inp.id = `edit-opt-text-${i}`;
+      inp.style.cssText = 'flex:1;padding:.3rem .5rem;border:1px solid var(--rule);border-radius:var(--r);font-size:.85rem';
+      inp.value = opt;
+      const lbl = document.createElement('label');
+      lbl.htmlFor = `edit-opt-${i}`;
+      lbl.style.cssText = 'font-size:.8rem;color:var(--muted);min-width:3rem';
+      lbl.textContent = i === tk.correctIdx ? '✓ Helyes' : '';
+      radio.addEventListener('change', () => {
+        document.querySelectorAll('[id^=edit-opt-]').forEach(el => {
+          if (el.tagName === 'LABEL') el.textContent = '';
+        });
+        lbl.textContent = '✓ Helyes';
+      });
+      row.appendChild(radio); row.appendChild(inp); row.appendChild(lbl);
+      ansField.appendChild(row);
+    });
+  } else if (tk.type === 'text') {
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.id = 'edit-keywords';
+    inp.style.cssText = 'width:100%;padding:.4rem .6rem;border:1px solid var(--rule);border-radius:var(--r)';
+    inp.value = tk.keywords.join(', ');
+    ansField.appendChild(inp);
+  } else if (tk.type === 'order') {
+    const ta = document.createElement('textarea');
+    ta.id = 'edit-order-items'; ta.rows = 4;
+    ta.style.cssText = 'width:100%;padding:.4rem .6rem;border:1px solid var(--rule);border-radius:var(--r)';
+    ta.value = tk.items.join('\n');
+    ansField.appendChild(ta);
+  } else if (tk.type === 'match') {
+    const ta = document.createElement('textarea');
+    ta.id = 'edit-match-pairs'; ta.rows = 4;
+    ta.style.cssText = 'width:100%;padding:.4rem .6rem;border:1px solid var(--rule);border-radius:var(--r)';
+    ta.value = tk.pairs.map(([l,r])=>l+' | '+r).join('\n');
+    ansField.appendChild(ta);
+  }
+
+  body.appendChild(ansField);
+
+  const errEl = document.createElement('div');
+  errEl.id = 'edit-task-err';
+  errEl.className = 'alert alert-danger';
+  errEl.style.display = 'none';
+  errEl.style.marginTop = '.5rem';
+  body.appendChild(errEl);
+
+  box.appendChild(body);
+
+  // Footer
+  const footer = document.createElement('div');
+  footer.style.cssText = 'padding:1rem 1.5rem;border-top:1px solid var(--rule);display:flex;justify-content:flex-end;gap:.5rem';
+  footer.innerHTML = `<button class="btn btn-secondary" onclick="document.getElementById('task-edit-modal').remove()">Mégse</button>`;
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'btn btn-primary';
+  saveBtn.textContent = 'Mentés';
+  saveBtn.onclick = () => saveEditTask(taskId, tk.type);
+  footer.appendChild(saveBtn);
+  box.appendChild(footer);
+
+  modal.appendChild(box);
+  document.body.appendChild(modal);
+}
+
+async function saveEditTask(taskId, type) {
+  const errEl = document.getElementById('edit-task-err');
+  errEl.style.display = 'none';
+  const text = document.getElementById('edit-task-text').value.trim();
+  const difficulty = parseInt(document.getElementById('edit-task-diff').value);
+  if (!text) { errEl.textContent = 'A kérdés szövege kötelező.'; errEl.style.display='flex'; return; }
+
+  const body = { text, difficulty };
+
+  if (type === 'mc') {
+    const options = [];
+    let correctIdx = -1;
+    let i = 0;
+    while (document.getElementById(`edit-opt-text-${i}`)) {
+      options.push(document.getElementById(`edit-opt-text-${i}`).value.trim());
+      if (document.getElementById(`edit-opt-${i}`)?.checked) correctIdx = i;
+      i++;
+    }
+    if (correctIdx === -1) { errEl.textContent = 'Jelölje meg a helyes választ.'; errEl.style.display='flex'; return; }
+    body.options = options; body.correctIdx = correctIdx;
+  } else if (type === 'text') {
+    body.keywords = document.getElementById('edit-keywords').value.split(',').map(k=>k.trim()).filter(Boolean);
+  } else if (type === 'order') {
+    body.items = document.getElementById('edit-order-items').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  } else if (type === 'match') {
+    body.pairs = document.getElementById('edit-match-pairs').value.split('\n').map(l=>{const [a,b]=(l+'').split('|');return[a?.trim(),b?.trim()];}).filter(([a,b])=>a&&b);
+  }
+
+  try {
+    await apiFetch(`/api/admin/tasks?id=${taskId}`, { method:'PUT', body: JSON.stringify(body) });
+    document.getElementById('task-edit-modal').remove();
+    await refreshAdminData();
+  } catch(e) { errEl.textContent = e.message; errEl.style.display='flex'; }
+}
+
+async function deleteTask(taskId) {
+  if (!confirm('Biztosan törli ezt a feladatot a bankból?')) return;
+  try {
+    await apiDelete(`/api/admin/tasks?id=${taskId}`);
+    await refreshAdminData();
+  } catch(e) { alert(e.message); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  EXAMINEE EXPORT
+// ═══════════════════════════════════════════════════════════════
+async function getExamineesForExport() {
+  const sel = document.getElementById('examinees-filter-exam');
+  const examCode = sel?.value || '';
+  if (!examCode) { alert('Kérjük, válasszon vizsgát az exportálás előtt.'); return null; }
+
+  const data = await apiGet(`/api/admin/examinees?examCode=${examCode}`);
+  const examinees = Array.isArray(data.examinees) ? data.examinees : [];
+  const results = await apiGet(`/api/admin/results?examCode=${examCode}`).catch(() => []);
+  const resultMap = {};
+  (Array.isArray(results) ? results : []).forEach(r => resultMap[r.examineeId] = r);
+
+  return examinees.map(eid => ({
+    examineeId: eid,
+    examCode,
+    status: resultMap[eid]
+      ? (resultMap[eid].released ? 'Közzétett' : 'Beadva – függőben')
+      : 'Nem adta be',
+  }));
+}
+
+async function exportExamineesExcel() {
+  const rows = await getExamineesForExport();
+  if (!rows) return;
+  if (!rows.length) { alert('Nincsenek vizsgázók ehhez a vizsgához.'); return; }
+
+  if (typeof XLSX === 'undefined') {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    document.head.appendChild(s);
+    await new Promise(res => s.onload = res);
+  }
+
+  const examCode = document.getElementById('examinees-filter-exam').value;
+  const sheetRows = rows.map(r => ({
+    'Vizsgakód':           r.examCode,
+    'Vizsgázói azonosító': r.examineeId,
+    'Állapot':             r.status,
+  }));
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(sheetRows);
+  ws['!cols'] = [18, 24, 22].map(w => ({ wch: w }));
+  XLSX.utils.book_append_sheet(wb, ws, 'Vizsgázók');
+  XLSX.writeFile(wb, `obscuron-vizsgazok-${examCode}-${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+async function exportExamineesPDF() {
+  const rows = await getExamineesForExport();
+  if (!rows) return;
+  if (!rows.length) { alert('Nincsenek vizsgázók ehhez a vizsgához.'); return; }
+
+  if (typeof window.jspdf === 'undefined') {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    document.head.appendChild(s);
+    await new Promise(res => s.onload = res);
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const examCode = document.getElementById('examinees-filter-exam').value;
+  const exam = cachedExams.find(e => e.code === examCode);
+
+  doc.setLanguage('hu');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.text('Obscuron Vizsgaportal - Vizsgazoi Lista', 14, 16);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.text(`Vizsga: ${examCode}${exam ? ' - ' + exam.title : ''}`, 14, 23);
+  doc.text(`Exportalva: ${new Date().toLocaleString()}`, 14, 28);
+
+  const headers = ['Vizsgakod', 'Vizsgazoi azonosito', 'Allapot'];
+  const colX = [14, 50, 120];
+
+  let y = 38;
+  doc.setFillColor(27, 79, 138);
+  doc.rect(14, y - 5, 182, 8, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  headers.forEach((h, i) => doc.text(h, colX[i] + 1, y));
+
+  doc.setFont('helvetica', 'normal');
+  rows.forEach((r, idx) => {
+    y += 8;
+    if (y > 270) { doc.addPage(); y = 20; }
+    doc.setFillColor(idx % 2 === 0 ? 240 : 255, idx % 2 === 0 ? 244 : 255, idx % 2 === 0 ? 250 : 255);
+    doc.rect(14, y - 5, 182, 8, 'F');
+    doc.setTextColor(30, 30, 30);
+    [r.examCode, r.examineeId, r.status].forEach((cell, i) => doc.text(String(cell), colX[i] + 1, y));
+  });
+
+  doc.setFontSize(7);
+  doc.setTextColor(150);
+  doc.text(`${rows.length} vizsgazo`, 14, y + 10);
+
+  doc.save(`obscuron-vizsgazok-${examCode}-${new Date().toISOString().slice(0,10)}.pdf`);
+}
 
 // ═══════════════════════════════════════════════════════════════
 //  INIT

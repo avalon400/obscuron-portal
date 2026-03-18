@@ -16,7 +16,7 @@ id       = "a0b91b34388d4cf492963cb9b63f61f3"
 # If you want a single Worker-only deploy (no Pages), remove this and
 # serve the HTML from the Worker itself.
 [env.production]
-name = "obscuronportal-worker-prod"
+name = "obscuron-worker-prod"
 
 # ── Secrets (set via CLI, not stored here) ────────────────────────────────────
 # wrangler secret put ADMIN_PASSWORD

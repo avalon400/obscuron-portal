@@ -1,11 +1,1 @@
-# Cloudflare Pages configuration
-# Place this file at the root of the `frontend/` directory before deploying.
-
-[build]
-command = ""
-destination = "."
-
-[[redirects]]
-from = "/api/*"
-to   = "https://competencegate.YOUR-SUBDOMAIN.workers.dev/api/:splat"
-status = 200
+/api/* https://obscuronportal-worker.nagybeni0204.workers.dev/api/:splat 302

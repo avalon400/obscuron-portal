@@ -588,7 +588,7 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
 // ═══════════════════════════════════════════════════════════════
 //  CONFIG — set this to your Cloudflare Worker URL after deploy
 // ═══════════════════════════════════════════════════════════════
-const API = '';
+const API = 'https://obscuronportal-worker.nagybeni0204.workers.dev';
 
 // ═══════════════════════════════════════════════════════════════
 //  i18n
@@ -917,15 +917,21 @@ async function doAdminLogin() {
 
 async function refreshAdminData() {
   try {
-    const [exams, tasks] = await Promise.all([apiGet('/api/admin/exams'), apiGet('/api/admin/tasks')]);
+    const [exams, tasks] = await Promise.all([
+      apiGet('/api/admin/exams').catch(e => { console.error('exams fetch failed:', e); return []; }),
+      apiGet('/api/admin/tasks').catch(e => { console.error('tasks fetch failed:', e); return []; }),
+    ]);
     cachedExams = Array.isArray(exams) ? exams : [];
     cachedTasks = Array.isArray(tasks) ? tasks : [];
-    renderExamList();
-    renderTaskBank();
-    populateExamSelects();
-    await loadResults();
-    await loadPublish();
-  } catch(e) { console.error(e); }
+  } catch(e) {
+    console.error('refreshAdminData failed:', e);
+    cachedExams = []; cachedTasks = [];
+  }
+  renderExamList();
+  renderTaskBank();
+  populateExamSelects();
+  loadResults().catch(e => console.error('loadResults failed:', e));
+  loadPublish().catch(e => console.error('loadPublish failed:', e));
 }
 
 // ─── EXAMS ───
@@ -934,17 +940,10 @@ async function adminCreateExam() {
   const errEl=document.getElementById('ex-err');errEl.style.display='none';
   if(!title||!code||!timeMins){showErr(errEl,t('err_fill_required'));return;}
   try {
-    const exam=await apiPost('/api/admin/exams',{title,category:cat,code,timeMins,desc});
-    console.log('createExam response:', JSON.stringify(exam));
-    if(exam && exam.code) {
-      cachedExams.push(exam);
-    } else {
-      // Response didn't have .code — refresh from server to be safe
-      await refreshAdminData();
-    }
+    await apiPost('/api/admin/exams',{title,category:cat,code,timeMins,desc});
     ['ex-title','ex-cat','ex-code','ex-time','ex-desc'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-    renderExamList(); populateExamSelects(); loadPublish();
-  } catch(e){console.error('createExam error:', e); showErr(errEl,e.message);}
+    await refreshAdminData();
+  } catch(e){ showErr(errEl,e.message); }
 }
 
 function renderExamList() {
@@ -1086,7 +1085,8 @@ async function loadResults(){
   const tbody=document.getElementById('results-body');if(!tbody)return;
   try {
     const path='/api/admin/results'+(filterCode?`?examCode=${filterCode}`:'');
-    const records=await apiGet(path);
+    const raw=await apiGet(path);
+    const records=Array.isArray(raw)?raw:[];
     tbody.innerHTML='';
     document.getElementById('no-results-msg').style.display=records.length?'none':'block';
     records.slice().reverse().forEach(r=>{
@@ -1105,7 +1105,8 @@ async function loadPublish(){
   if(!Array.isArray(cachedExams)) cachedExams=[];
   document.getElementById('no-publish-msg').style.display=cachedExams.length?'none':'block';
   try {
-    const allResults=await apiGet('/api/admin/results');
+    const rawResults=await apiGet('/api/admin/results');
+    const allResults=Array.isArray(rawResults)?rawResults:[];
     cachedExams.forEach(exam=>{
       const subs=allResults.filter(r=>r.examCode===exam.code);
       const allReleased=subs.length>0&&subs.every(r=>r.released);

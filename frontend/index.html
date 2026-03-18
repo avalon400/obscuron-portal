@@ -189,7 +189,7 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
   </div>
   <div class="header-right">
     <div class="header-meta" id="header-meta"></div>
-    <div class="lang-switcher">
+    <div class="lang-switcher" style="display:none">
       <button class="lang-btn active" onclick="setLang('hu')" id="lang-hu">HU</button>
       <button class="lang-btn" onclick="setLang('en')" id="lang-en">EN</button>
     </div>
@@ -524,7 +524,7 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
           <div class="panel-head"><h3 data-i18n="register_examinee">Vizsgázó regisztrálása</h3></div>
           <div class="panel-body">
             <div class="field"><label data-i18n="select_exam">Vizsga</label><select id="reg-exam-sel"></select></div>
-            <div class="field"><label data-i18n="examinee_id">Vizsgázói azonosító</label><input id="reg-eid" type="text" class="mono" maxlength="14" oninput="this.value=this.value.toUpperCase()" placeholder="pl. VZ-00001"></div>
+            <div class="field"><label data-i18n="examinee_id">Vizsgázói azonosító</label><div style="display:flex;gap:.5rem;align-items:center"><input id="reg-eid" type="text" class="mono" maxlength="16" oninput="this.value=this.value.toUpperCase()" placeholder="OVP-AB12345117"><button type="button" class="btn btn-secondary btn-sm" onclick="generateExamineeId()" title="Azonosító generálása">⟳ Generál</button></div></div>
             <div id="reg-msg" style="display:none;margin-top:.5rem"></div>
           </div>
           <div class="panel-foot"><button class="btn btn-primary" onclick="adminRegisterExaminee()" data-i18n="btn_register">Regisztrálás</button></div>
@@ -549,6 +549,8 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
           <div style="display:flex;gap:.5rem;align-items:center">
             <select id="filter-exam" style="padding:.35rem .65rem;border:1px solid var(--rule);border-radius:var(--r);font-size:.83rem" onchange="loadResults()"></select>
             <button class="btn btn-secondary btn-sm" onclick="loadResults()" data-i18n="btn_refresh">↻ Frissítés</button>
+            <button class="btn btn-secondary btn-sm" onclick="exportResultsExcel()" title="Export Excel">⬇ Excel</button>
+            <button class="btn btn-secondary btn-sm" onclick="exportResultsPDF()" title="Export PDF">⬇ PDF</button>
           </div>
         </div>
         <div style="overflow-x:auto">
@@ -915,12 +917,14 @@ async function doAdminLogin() {
 
 async function refreshAdminData() {
   try {
-    [cachedExams, cachedTasks] = await Promise.all([apiGet('/api/admin/exams'), apiGet('/api/admin/tasks')]);
+    const [exams, tasks] = await Promise.all([apiGet('/api/admin/exams'), apiGet('/api/admin/tasks')]);
+    cachedExams = Array.isArray(exams) ? exams : [];
+    cachedTasks = Array.isArray(tasks) ? tasks : [];
     renderExamList();
     renderTaskBank();
     populateExamSelects();
-    loadResults();
-    loadPublish();
+    await loadResults();
+    await loadPublish();
   } catch(e) { console.error(e); }
 }
 
@@ -931,7 +935,7 @@ async function adminCreateExam() {
   if(!title||!code||!timeMins){showErr(errEl,t('err_fill_required'));return;}
   try {
     const exam=await apiPost('/api/admin/exams',{title,category:cat,code,timeMins,desc});
-    cachedExams.push(exam);
+    if(exam && exam.code) cachedExams.push(exam);
     ['ex-title','ex-cat','ex-code','ex-time','ex-desc'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
     renderExamList(); populateExamSelects(); loadPublish();
   } catch(e){showErr(errEl,e.message);}
@@ -1092,6 +1096,7 @@ async function loadResults(){
 async function loadPublish(){
   const tbody=document.getElementById('publish-body');if(!tbody)return;
   tbody.innerHTML='';
+  if(!Array.isArray(cachedExams)) cachedExams=[];
   document.getElementById('no-publish-msg').style.display=cachedExams.length?'none':'block';
   try {
     const allResults=await apiGet('/api/admin/results');
@@ -1140,6 +1145,142 @@ function v(id){const el=document.getElementById(id);return el?el.value.trim():''
 function fmtTime(s){if(!s)return'—';if(s<60)return s+'s';return Math.floor(s/60)+'m '+s%60+'s';}
 function showErr(el,msg){el.style.display='flex';el.textContent=msg;}
 function setBtnLoading(id,on){const el=document.getElementById(id);if(!el)return;el.disabled=on;el.innerHTML=on?`<span class="spinner"></span> …`:t('btn_verify');}
+
+// ═══════════════════════════════════════════════════════════════
+//  EXAMINEE ID GENERATOR
+// ═══════════════════════════════════════════════════════════════
+function generateExamineeId() {
+  const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // no I or O to avoid confusion
+  const ll = letters[Math.floor(Math.random()*letters.length)] +
+             letters[Math.floor(Math.random()*letters.length)];
+  const nnnnn = String(Math.floor(Math.random()*90000)+10000); // 5 digits, 10000-99999
+  const id = `OVP-${ll}${nnnnn}117`;
+  document.getElementById('reg-eid').value = id;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  EXPORT HELPERS
+// ═══════════════════════════════════════════════════════════════
+
+function getGradeLabel(points) {
+  if (points >= 2200) return t('grade_outstanding');
+  if (points >= 1800) return t('grade_excellent');
+  if (points >= 1400) return t('grade_proficient');
+  if (points >= 900)  return t('grade_developing');
+  return t('grade_beginning');
+}
+
+function formatTime(seconds) {
+  if (!seconds && seconds !== 0) return '—';
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+async function fetchAllResultsForExport() {
+  const filterCode = document.getElementById('filter-exam')?.value || '';
+  const path = '/api/admin/results' + (filterCode ? `?examCode=${filterCode}` : '');
+  return await apiGet(path);
+}
+
+// ─── EXCEL EXPORT ───
+async function exportResultsExcel() {
+  if (typeof XLSX === 'undefined') {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    document.head.appendChild(s);
+    await new Promise(res => s.onload = res);
+  }
+  const records = await fetchAllResultsForExport();
+  if (!records.length) { alert('Nincsenek exportálható eredmények.'); return; }
+
+  const rows = records.map(r => ({
+    'Vizsgakód':          r.examCode,
+    'Vizsgázói azonosító': r.examineeId,
+    'Pontszám (/ 2500)':  r.points,
+    'Minősítés':          getGradeLabel(r.points),
+    'Felhasznált idő':    formatTime(r.timeUsed),
+    'Állapot':            r.released ? t('status_published') : t('status_pending'),
+    'Beadva':             new Date(r.submittedAt).toLocaleString(),
+  }));
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(rows);
+
+  // Column widths
+  ws['!cols'] = [18,22,18,16,14,14,20].map(w => ({ wch: w }));
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Eredmények');
+  XLSX.writeFile(wb, `obscuron-eredmenyek-${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+// ─── PDF EXPORT ───
+async function exportResultsPDF() {
+  if (typeof window.jspdf === 'undefined') {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    document.head.appendChild(s);
+    await new Promise(res => s.onload = res);
+  }
+  if (typeof window.jspdf.jsPDF === 'undefined') {
+    alert('PDF könyvtár betöltése sikertelen.'); return;
+  }
+  const records = await fetchAllResultsForExport();
+  if (!records.length) { alert('Nincsenek exportálható eredmények.'); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+  // Header
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.text('Obscuron Vizsgarendszer — Eredménylista', 14, 16);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.text(`Exportálva: ${new Date().toLocaleString()}`, 14, 22);
+
+  // Table headers
+  const headers = ['Vizsgakód', 'Vizsgázói azonosító', 'Pontszám', 'Minősítés', 'Idő', 'Állapot', 'Beadva'];
+  const colX    = [14, 50, 95, 117, 145, 165, 190];
+  const colW    = [34, 43, 20, 26,  18,  23,  50];
+
+  let y = 32;
+  doc.setFillColor(27, 79, 138);
+  doc.rect(14, y - 5, 269, 8, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  headers.forEach((h, i) => doc.text(h, colX[i] + 1, y));
+
+  // Rows
+  doc.setFont('helvetica', 'normal');
+  records.forEach((r, idx) => {
+    y += 8;
+    if (y > 190) { doc.addPage(); y = 20; }
+    doc.setFillColor(idx % 2 === 0 ? 240 : 255, idx % 2 === 0 ? 244 : 255, idx % 2 === 0 ? 250 : 255);
+    doc.rect(14, y - 5, 269, 8, 'F');
+    doc.setTextColor(30, 30, 30);
+    const row = [
+      r.examCode,
+      r.examineeId,
+      `${r.points} / 2500`,
+      getGradeLabel(r.points),
+      formatTime(r.timeUsed),
+      r.released ? 'Közzétett' : 'Függőben',
+      new Date(r.submittedAt).toLocaleString(),
+    ];
+    row.forEach((cell, i) => {
+      const text = String(cell);
+      doc.text(text.length > 22 ? text.slice(0,21)+'…' : text, colX[i] + 1, y);
+    });
+  });
+
+  doc.setFontSize(7);
+  doc.setTextColor(150);
+  doc.text(`${records.length} rekord`, 14, y + 10);
+
+  doc.save(`obscuron-eredmenyek-${new Date().toISOString().slice(0,10)}.pdf`);
+}
 
 // ═══════════════════════════════════════════════════════════════
 //  INIT

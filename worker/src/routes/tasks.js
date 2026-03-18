@@ -74,3 +74,19 @@ export async function remove(request, env) {
 
   return json({ ok: true });
 }
+
+/** PUT /api/admin/tasks?id=xxx — edit a task */
+export async function update(request, env) {
+  const url = new URL(request.url);
+  const id  = url.searchParams.get('id');
+  if (!id) return err(400, 'id query param required.');
+
+  const task = await kvGet(env, `task:${id}`);
+  if (!task) return err(404, 'Task not found.');
+
+  const body = await request.json();
+  const updated = { ...task, ...body, id, createdAt: task.createdAt };
+  await kvSet(env, `task:${id}`, updated);
+
+  return json(updated);
+}

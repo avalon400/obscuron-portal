@@ -184,8 +184,8 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
 <!-- ═══ SITE HEADER ═══ -->
 <div class="site-header">
   <div class="site-logo">
-    <div class="crest">OVP</div>
-    <span data-i18n="site_title">Vizsgaportál</span>
+    <div class="crest">CG</div>
+    <span data-i18n="site_title">KompetenciaKapu — Vizsgáztató Rendszer</span>
   </div>
   <div class="header-right">
     <div class="header-meta" id="header-meta"></div>
@@ -935,10 +935,16 @@ async function adminCreateExam() {
   if(!title||!code||!timeMins){showErr(errEl,t('err_fill_required'));return;}
   try {
     const exam=await apiPost('/api/admin/exams',{title,category:cat,code,timeMins,desc});
-    if(exam && exam.code) cachedExams.push(exam);
+    console.log('createExam response:', JSON.stringify(exam));
+    if(exam && exam.code) {
+      cachedExams.push(exam);
+    } else {
+      // Response didn't have .code — refresh from server to be safe
+      await refreshAdminData();
+    }
     ['ex-title','ex-cat','ex-code','ex-time','ex-desc'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
     renderExamList(); populateExamSelects(); loadPublish();
-  } catch(e){showErr(errEl,e.message);}
+  } catch(e){console.error('createExam error:', e); showErr(errEl,e.message);}
 }
 
 function renderExamList() {

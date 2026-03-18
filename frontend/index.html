@@ -184,8 +184,8 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
 <!-- ═══ SITE HEADER ═══ -->
 <div class="site-header">
   <div class="site-logo">
-    <div class="crest">CG</div>
-    <span data-i18n="site_title">KompetenciaKapu — Vizsgáztató Rendszer</span>
+    <div class="crest">OVP</div>
+    <span data-i18n="site_title">OVP Vizsgaportál</span>
   </div>
   <div class="header-right">
     <div class="header-meta" id="header-meta"></div>
@@ -441,7 +441,7 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
         </div>
         <div class="panel">
           <div class="panel-head"><h3 data-i18n="exam_list">Vizsgák listája</h3></div>
-          <div style="overflow-x:auto"><table class="data-table"><thead><tr><th data-i18n="th_code">Kód</th><th data-i18n="th_title">Megnevezés</th><th data-i18n="th_tasks">Feladatok</th><th data-i18n="th_time">Idő</th></tr></thead><tbody id="exam-list-body"></tbody></table></div>
+          <div style="overflow-x:auto"><table class="data-table"><thead><tr><th data-i18n="th_code">Kód</th><th data-i18n="th_title">Megnevezés</th><th data-i18n="th_tasks">Feladatok</th><th data-i18n="th_time">Idő</th><th></th></tr></thead><tbody id="exam-list-body"></tbody></table></div>
         </div>
       </div>
       <div class="panel" style="margin-top:1.4rem">
@@ -511,7 +511,7 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
             <span class="badge badge-blue" id="task-count-badge">0</span>
           </div>
           <div style="overflow-x:auto;max-height:520px;overflow-y:auto">
-            <table class="data-table"><thead><tr><th>#</th><th data-i18n="th_question">Kérdés</th><th data-i18n="th_type">Típus</th><th data-i18n="th_diff">Neh.</th><th data-i18n="th_pts">Pont</th></tr></thead><tbody id="task-bank-body"></tbody></table>
+            <table class="data-table"><thead><tr><th>#</th><th data-i18n="th_question">Kérdés</th><th data-i18n="th_type">Típus</th><th data-i18n="th_diff">Neh.</th><th data-i18n="th_pts">Pont</th><th></th></tr></thead><tbody id="task-bank-body"></tbody></table>
           </div>
         </div>
       </div>
@@ -535,7 +535,7 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
             <select id="examinees-filter-exam" style="padding:.35rem .65rem;border:1px solid var(--rule);border-radius:var(--r);font-size:.83rem" onchange="loadExaminees()"></select>
           </div>
           <div style="overflow-x:auto;max-height:400px;overflow-y:auto">
-            <table class="data-table"><thead><tr><th data-i18n="examinee_id">Azonosító</th><th data-i18n="th_status">Állapot</th></tr></thead><tbody id="examinees-body"></tbody></table>
+            <table class="data-table"><thead><tr><th data-i18n="examinee_id">Azonosító</th><th data-i18n="th_status">Állapot</th><th></th></tr></thead><tbody id="examinees-body"></tbody></table>
           </div>
         </div>
       </div>
@@ -951,9 +951,22 @@ function renderExamList() {
   tbody.innerHTML='';
   if(!cachedExams.length){tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:1.5rem">${t('no_exams')}</td></tr>`;return;}
   cachedExams.forEach(e=>{
+    const examTasks = e.taskIds.map(id=>cachedTasks.find(tk=>tk.id===id)).filter(Boolean);
+    const totalWeight = examTasks.reduce((s,tk)=>s+DIFF_WEIGHT[tk.difficulty],0);
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td><code style="font-size:.8rem">${e.code}</code></td><td>${e.title}</td><td>${e.taskIds.length}</td><td>${e.timeMins} ${t('min_placeholder')}</td>`;
+    tr.style.cursor='pointer';
+    tr.innerHTML=`<td><code style="font-size:.8rem">${e.code}</code></td><td>${e.title}</td><td>${e.taskIds.length}</td><td>${e.timeMins} ${t('min_placeholder')}</td><td><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteExam('${e.code}')">✕</button></td>`;
     tbody.appendChild(tr);
+    // Task detail row (collapsed by default)
+    if (examTasks.length > 0) {
+      const detailRow = document.createElement('tr');
+      detailRow.id = 'exam-detail-'+e.code;
+      detailRow.style.display = 'none';
+      const taskList = examTasks.map(tk=>`<span style="display:inline-flex;align-items:center;gap:.3rem;background:var(--off);border:1px solid var(--rule);border-radius:var(--r);padding:.2rem .5rem;font-size:.78rem;margin:.15rem">${tk.text.substring(0,30)}… <button onclick="removeTaskFromExam('${e.code}','${tk.id}')" style="background:none;border:none;cursor:pointer;color:var(--danger);font-size:.9rem;padding:0">✕</button></span>`).join('');
+      detailRow.innerHTML=`<td colspan="5" style="background:var(--off);padding:.6rem 1rem">${taskList}</td>`;
+      tbody.appendChild(detailRow);
+      tr.onclick = ()=>{ const d=document.getElementById('exam-detail-'+e.code); d.style.display=d.style.display==='none'?'':'none'; };
+    }
   });
 }
 
@@ -1037,9 +1050,9 @@ function renderTaskBank(){
   tbody.innerHTML='';
   if(!cachedTasks.length){tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem">${t('no_tasks')}</td></tr>`;return;}
   cachedTasks.forEach((tk,i)=>{
-    const pts=Math.round(DIFF_WEIGHT[tk.difficulty]/DIFF_WEIGHT[7]*2500);
+    const pts=taskPoints(tk);
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td style="color:var(--muted)">${i+1}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${tk.text}</td><td><span class="badge badge-blue">${tk.type.toUpperCase()}</span></td><td>${tk.difficulty}</td><td>${pts}</td>`;
+    tr.innerHTML=`<td style="color:var(--muted)">${i+1}</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${tk.text}</td><td><span class="badge badge-blue">${tk.type.toUpperCase()}</span></td><td>${tk.difficulty}</td><td>${pts}</td><td style="white-space:nowrap"><button class="btn btn-secondary btn-sm" onclick="viewEditTask('${tk.id}')">✎</button> <button class="btn btn-danger btn-sm" onclick="deleteTask('${tk.id}')">✕</button></td>`;
     tbody.appendChild(tr);
   });
   const badge=document.getElementById('task-count-badge');
@@ -1073,7 +1086,7 @@ async function loadExaminees(){
     data.examinees.forEach(eid=>{
       const res=resultMap[eid];
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td><code>${eid}</code></td><td>${res?`<span class="badge ${res.released?'badge-green':'badge-yellow'}">${res.released?t('status_published'):t('status_pending')}</span>`:`<span class="badge badge-grey">—</span>`}</td>`;
+      tr.innerHTML=`<td><code>${eid}</code></td><td>${res?`<span class="badge ${res.released?'badge-green':'badge-yellow'}">${res.released?t('status_published'):t('status_pending')}</span>`:`<span class="badge badge-grey">—</span>`}</td><td><button class="btn btn-danger btn-sm" onclick="unregisterExaminee('${sel.value}','${eid}')">✕</button></td>`;
       tbody.appendChild(tr);
     });
   } catch(e){console.error(e);}
@@ -1089,7 +1102,7 @@ async function loadResults(){
     const records=Array.isArray(raw)?raw:[];
     tbody.innerHTML='';
     document.getElementById('no-results-msg').style.display=records.length?'none':'block';
-    records.slice().reverse().forEach(r=>{
+    records.slice().sort((a,b)=>a.examCode.localeCompare(b.examCode)).forEach(r=>{
       const exam=cachedExams.find(e=>e.code===r.examCode);
       const tr=document.createElement('tr');
       tr.innerHTML=`<td><code>${r.examineeId}</code></td><td><code>${r.examCode}</code></td><td><strong>${r.points}</strong> / 2500</td><td>${r.correct} / ${r.total}</td><td><span class="badge ${r.released?'badge-green':'badge-grey'}">${r.released?t('status_published'):t('status_pending')}</span></td><td style="font-size:.78rem;color:var(--muted)">${new Date(r.submittedAt).toLocaleString()}</td>`;
@@ -1201,6 +1214,7 @@ async function exportResultsExcel() {
   const records = await fetchAllResultsForExport();
   if (!records.length) { alert('Nincsenek exportálható eredmények.'); return; }
 
+  records.sort((a,b)=>a.examCode.localeCompare(b.examCode));
   const rows = records.map(r => ({
     'Vizsgakód':          r.examCode,
     'Vizsgázói azonosító': r.examineeId,
@@ -1237,11 +1251,14 @@ async function exportResultsPDF() {
 
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  // Use built-in latin encoding to handle ő, ű, á etc.
+  doc.setLanguage('hu');
+  records.sort((a,b)=>a.examCode.localeCompare(b.examCode));
 
   // Header
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(14);
-  doc.text('Obscuron Vizsgarendszer — Eredménylista', 14, 16);
+  doc.text('Obscuron Vizsgaportál — Eredménylista', 14, 16);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.text(`Exportálva: ${new Date().toLocaleString()}`, 14, 22);
@@ -1287,6 +1304,155 @@ async function exportResultsPDF() {
   doc.text(`${records.length} rekord`, 14, y + 10);
 
   doc.save(`obscuron-eredmenyek-${new Date().toISOString().slice(0,10)}.pdf`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DYNAMIC SCORING
+// ═══════════════════════════════════════════════════════════════
+// Points per task = (difficulty_weight / total_weight_of_all_exam_tasks) * 2500
+// For task bank display we show the raw weight-based value assuming solo task.
+function taskPoints(task, allTasks) {
+  if (!allTasks || allTasks.length === 0) {
+    // Standalone display: show weight relative to max difficulty
+    return Math.round((DIFF_WEIGHT[task.difficulty] / DIFF_WEIGHT[7]) * 2500);
+  }
+  const totalWeight = allTasks.reduce((s, t) => s + DIFF_WEIGHT[t.difficulty], 0);
+  if (totalWeight === 0) return 0;
+  return Math.round((DIFF_WEIGHT[task.difficulty] / totalWeight) * 2500);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DELETE EXAM
+// ═══════════════════════════════════════════════════════════════
+async function deleteExam(code) {
+  if (!confirm(`Biztosan törli a(z) "${code}" vizsgát? Ez nem vonható vissza.`)) return;
+  try {
+    await apiDelete(`/api/admin/exams?code=${code}`);
+    await refreshAdminData();
+  } catch(e) { alert(e.message); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  REMOVE TASK FROM EXAM
+// ═══════════════════════════════════════════════════════════════
+async function removeTaskFromExam(examCode, taskId) {
+  if (!confirm('Biztosan eltávolítja ezt a feladatot a vizsgából?')) return;
+  try {
+    await apiPost('/api/admin/exams/removetask', { examCode, taskId });
+    await refreshAdminData();
+  } catch(e) { alert(e.message); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  UNREGISTER EXAMINEE
+// ═══════════════════════════════════════════════════════════════
+async function unregisterExaminee(examCode, eid) {
+  if (!confirm(`Biztosan törli a(z) "${eid}" vizsgázót?`)) return;
+  try {
+    await apiDelete(`/api/admin/examinees?examCode=${examCode}&examineeId=${eid}`);
+    loadExaminees();
+  } catch(e) { alert(e.message); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  VIEW / EDIT TASK MODAL
+// ═══════════════════════════════════════════════════════════════
+function viewEditTask(taskId) {
+  const tk = cachedTasks.find(t => t.id === taskId);
+  if (!tk) return;
+
+  const typeLabels = { mc: 'Feleletválasztós', text: 'Rövid válasz', order: 'Sorbarendezés', match: 'Párosítás' };
+
+  let answerHtml = '';
+  if (tk.type === 'mc') {
+    answerHtml = tk.options.map((opt, i) =>
+      `<div style="padding:.3rem 0;display:flex;align-items:center;gap:.5rem">
+        <input type="radio" name="edit-mc" value="${i}" id="edit-opt-${i}" ${i === tk.correctIdx ? 'checked' : ''}>
+        <input type="text" value="${opt.replace(/"/g,'&quot;')}" id="edit-opt-text-${i}" style="flex:1;padding:.3rem .5rem;border:1px solid var(--rule);border-radius:var(--r);font-size:.85rem">
+        <label for="edit-opt-${i}" style="font-size:.8rem;color:var(--muted)">${i === tk.correctIdx ? '✓ Helyes' : ''}</label>
+      </div>`
+    ).join('');
+  } else if (tk.type === 'text') {
+    answerHtml = `<div class="field"><label>Kulcsszavak (vesszővel elválasztva)</label><input type="text" id="edit-keywords" value="${tk.keywords.join(', ')}" style="width:100%;padding:.4rem .6rem;border:1px solid var(--rule);border-radius:var(--r)"></div>`;
+  } else if (tk.type === 'order') {
+    answerHtml = `<div class="field"><label>Helyes sorrend (soronként egy)</label><textarea id="edit-order-items" rows="4" style="width:100%;padding:.4rem .6rem;border:1px solid var(--rule);border-radius:var(--r)">${tk.items.join('\n')}</textarea></div>`;
+  } else if (tk.type === 'match') {
+    answerHtml = `<div class="field"><label>Párok (Bal | Jobb, soronként egy)</label><textarea id="edit-match-pairs" rows="4" style="width:100%;padding:.4rem .6rem;border:1px solid var(--rule);border-radius:var(--r)">${tk.pairs.map(([l,r])=>l+' | '+r).join('\n')}</textarea></div>`;
+  }
+
+  const modal = document.createElement('div');
+  modal.id = 'task-edit-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem';
+  modal.innerHTML = `
+    <div style="background:var(--white);border-radius:var(--r);width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18)">
+      <div style="padding:1.2rem 1.5rem;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center">
+        <h3 style="margin:0;font-size:1rem">Feladat szerkesztése</h3>
+        <button onclick="document.getElementById('task-edit-modal').remove()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--muted)">✕</button>
+      </div>
+      <div style="padding:1.2rem 1.5rem">
+        <div class="field">
+          <label>Kérdés szövege</label>
+          <textarea id="edit-task-text" rows="3" style="width:100%;padding:.4rem .6rem;border:1px solid var(--rule);border-radius:var(--r)">${tk.text}</textarea>
+        </div>
+        <div class="field" style="display:flex;gap:1rem">
+          <div style="flex:1"><label>Típus</label><div style="padding:.4rem 0;font-weight:600">${typeLabels[tk.type]||tk.type}</div></div>
+          <div style="flex:1"><label>Nehézség (1–7)</label><input type="number" id="edit-task-diff" min="1" max="7" value="${tk.difficulty}" style="width:100%;padding:.4rem .6rem;border:1px solid var(--rule);border-radius:var(--r)"></div>
+        </div>
+        <div class="field">
+          <label>Válasz${tk.type==='mc'?' (jelölje meg a helyeset)':''}</label>
+          ${answerHtml}
+        </div>
+        <div id="edit-task-err" class="alert alert-danger" style="display:none;margin-top:.5rem"></div>
+      </div>
+      <div style="padding:1rem 1.5rem;border-top:1px solid var(--rule);display:flex;justify-content:flex-end;gap:.5rem">
+        <button class="btn btn-secondary" onclick="document.getElementById('task-edit-modal').remove()">Mégse</button>
+        <button class="btn btn-primary" onclick="saveEditTask('${taskId}','${tk.type}')">Mentés</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function saveEditTask(taskId, type) {
+  const errEl = document.getElementById('edit-task-err');
+  errEl.style.display = 'none';
+  const text = document.getElementById('edit-task-text').value.trim();
+  const difficulty = parseInt(document.getElementById('edit-task-diff').value);
+  if (!text) { errEl.textContent = 'A kérdés szövege kötelező.'; errEl.style.display='flex'; return; }
+
+  const body = { text, difficulty };
+
+  if (type === 'mc') {
+    const options = [];
+    let correctIdx = -1;
+    let i = 0;
+    while (document.getElementById(`edit-opt-text-${i}`)) {
+      options.push(document.getElementById(`edit-opt-text-${i}`).value.trim());
+      if (document.getElementById(`edit-opt-${i}`)?.checked) correctIdx = i;
+      i++;
+    }
+    if (correctIdx === -1) { errEl.textContent = 'Jelölje meg a helyes választ.'; errEl.style.display='flex'; return; }
+    body.options = options; body.correctIdx = correctIdx;
+  } else if (type === 'text') {
+    body.keywords = document.getElementById('edit-keywords').value.split(',').map(k=>k.trim()).filter(Boolean);
+  } else if (type === 'order') {
+    body.items = document.getElementById('edit-order-items').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  } else if (type === 'match') {
+    body.pairs = document.getElementById('edit-match-pairs').value.split('\n').map(l=>{const [a,b]=(l+'').split('|');return[a?.trim(),b?.trim()];}).filter(([a,b])=>a&&b);
+  }
+
+  try {
+    await apiFetch(`/api/admin/tasks?id=${taskId}`, { method:'PUT', body: JSON.stringify(body) });
+    document.getElementById('task-edit-modal').remove();
+    await refreshAdminData();
+  } catch(e) { errEl.textContent = e.message; errEl.style.display='flex'; }
+}
+
+async function deleteTask(taskId) {
+  if (!confirm('Biztosan törli ezt a feladatot a bankból?')) return;
+  try {
+    await apiDelete(`/api/admin/tasks?id=${taskId}`);
+    await refreshAdminData();
+  } catch(e) { alert(e.message); }
 }
 
 // ═══════════════════════════════════════════════════════════════

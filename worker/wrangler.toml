@@ -2,12 +2,6 @@ name            = "obscuronportal-worker"
 main            = "src/index.js"
 compatibility_date = "2024-01-01"
 
-# ── Static Frontend Assets ────────────────────────────────────────────────────
-# The Worker serves the frontend from the ../frontend directory.
-# This removes the need for Cloudflare Pages or _redirects entirely.
-[assets]
-directory = "../frontend"
-
 # ── KV Namespace ──────────────────────────────────────────────────────────────
 # After running `wrangler kv:namespace create CG_KV` replace the id below.
 [[kv_namespaces]]
@@ -22,7 +16,7 @@ id       = "a0b91b34388d4cf492963cb9b63f61f3"
 # If you want a single Worker-only deploy (no Pages), remove this and
 # serve the HTML from the Worker itself.
 [env.production]
-name = "competencegate-prod"
+name = "obscuron-worker-prod"
 
 # ── Secrets (set via CLI, not stored here) ────────────────────────────────────
 # wrangler secret put ADMIN_PASSWORD

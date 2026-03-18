@@ -1,1 +1,1 @@
-/api/* https://competencegate.obscuron.workers.dev/api/:splat 200
+/api/* https://competencegate.obscuron.workers.dev/api/:splat 302

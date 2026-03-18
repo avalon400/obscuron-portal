@@ -56,16 +56,20 @@ export default {
         // Exams
         if (path === '/api/admin/exams'         && method === 'GET')  return handleCORS(await examRoutes.list(request, env));
         if (path === '/api/admin/exams'         && method === 'POST') return handleCORS(await examRoutes.create(request, env));
+        if (path === '/api/admin/exams'         && method === 'DELETE') return handleCORS(await examRoutes.remove(request, env));
         if (path === '/api/admin/exams/assign'  && method === 'POST') return handleCORS(await examRoutes.assignTask(request, env));
+        if (path === '/api/admin/exams/removetask' && method === 'POST') return handleCORS(await examRoutes.removeTask(request, env));
 
         // Tasks
         if (path === '/api/admin/tasks'         && method === 'GET')  return handleCORS(await taskRoutes.list(request, env));
         if (path === '/api/admin/tasks'         && method === 'POST') return handleCORS(await taskRoutes.create(request, env));
         if (path === '/api/admin/tasks'         && method === 'DELETE') return handleCORS(await taskRoutes.remove(request, env));
+        if (path === '/api/admin/tasks'         && method === 'PUT') return handleCORS(await taskRoutes.update(request, env));
 
         // Examinees
         if (path === '/api/admin/examinees'     && method === 'POST') return handleCORS(await examineeRoutes.register(request, env));
         if (path === '/api/admin/examinees'     && method === 'GET')  return handleCORS(await examineeRoutes.list(request, env));
+        if (path === '/api/admin/examinees'     && method === 'DELETE') return handleCORS(await examineeRoutes.unregister(request, env));
 
         // Results
         if (path === '/api/admin/results'       && method === 'GET')  return handleCORS(await resultRoutes.listAll(request, env));
@@ -74,9 +78,6 @@ export default {
         return handleCORS(err(404, 'Route not found'));
       }
 
-      // ── SERVE STATIC FRONTEND ──────────────────────────
-      // When deployed via Pages this won't be reached,
-      // but useful for Worker-only deploys.
       return handleCORS(err(404, 'Not found'));
 
     } catch (e) {

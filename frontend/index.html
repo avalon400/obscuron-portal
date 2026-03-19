@@ -1177,8 +1177,8 @@ function generateExamineeId() {
   const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // no I or O to avoid confusion
   const ll = letters[Math.floor(Math.random()*letters.length)] +
              letters[Math.floor(Math.random()*letters.length)];
-  const nnnnn = String(Math.floor(Math.random()*90000)+10000); // 5 digits, 10000-99999
-  const id = `OVP-${ll}${nnnnn}117`;
+  const nnnnn = String(Math.floor(Math.random()*90000)+10000); // 9 digits, 100000000-999999999
+  const id = `OVP-${ll}${nnnnnnnnn}117`;
   document.getElementById('reg-eid').value = id;
 }
 

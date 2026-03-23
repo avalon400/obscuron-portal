@@ -35,6 +35,13 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--off);color:var(--in
 .page{max-width:660px;margin:3rem auto;padding:0 1rem;animation:appear .2s ease}
 .page-wide{max-width:1080px;margin:2.5rem auto;padding:0 1rem;animation:appear .2s ease}
 @keyframes appear{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+/* Rich text editor placeholder */
+#task-q:empty:before{content:attr(data-placeholder);color:var(--muted);pointer-events:none}
+/* Review branch dots */
+.review-branch-dot{width:2rem;height:2rem;border-radius:50%;border:2px solid var(--rule);background:transparent;cursor:pointer;font-size:.75rem;font-weight:600;display:inline-flex;align-items:center;justify-content:center}
+/* Numeric answer input */
+input[type=number]{-moz-appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 
 /* PANEL */
 .panel{background:var(--white);border:1px solid var(--rule);border-radius:var(--r);box-shadow:var(--sh)}
@@ -335,7 +342,7 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
         </div>
         <div class="field">
           <label data-i18n="examinee_id">Vizsgázói azonosító</label>
-          <input id="rl-eid" type="text" class="mono" placeholder="pl. VZ-00042" oninput="this.value=this.value.toUpperCase()">
+          <input id="rl-eid" type="text" class="mono" placeholder="AA117NNNNNNNNNC" maxlength="15" oninput="this.value=this.value.toUpperCase();validateIdField(this)">
         </div>
         <div id="rl-err" class="alert alert-danger" style="display:none;margin-top:.6rem"></div>
       </div>
@@ -463,7 +470,8 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
         <div class="panel">
           <div class="panel-head"><h3 data-i18n="add_task">Feladat hozzáadása a bankhoz</h3></div>
           <div class="panel-body">
-            <div class="field"><label data-i18n="question_text">Kérdés szövege</label><textarea id="task-q" rows="3"></textarea></div>
+            <div class="field"><label>Feladat neve (opcionális)</label><input id="task-name" type="text" placeholder="pl. 1. Matematika feladat"></div>
+            <div class="field"><label data-i18n="question_text">Kérdés szövege</label><div id="task-q-editor" style="border:1px solid var(--rule);border-radius:var(--r);overflow:hidden"><div id="task-q-toolbar" style="background:var(--off);border-bottom:1px solid var(--rule);padding:.3rem .5rem;display:flex;gap:.3rem;flex-wrap:wrap"><button type="button" onclick="fmtDoc('bold')" style="background:none;border:1px solid var(--rule);border-radius:3px;padding:.15rem .45rem;cursor:pointer;font-weight:bold">B</button><button type="button" onclick="fmtDoc('italic')" style="background:none;border:1px solid var(--rule);border-radius:3px;padding:.15rem .45rem;cursor:pointer;font-style:italic">I</button><button type="button" onclick="fmtDoc('underline')" style="background:none;border:1px solid var(--rule);border-radius:3px;padding:.15rem .45rem;cursor:pointer;text-decoration:underline">U</button><button type="button" onclick="fmtDoc('insertUnorderedList')" style="background:none;border:1px solid var(--rule);border-radius:3px;padding:.15rem .45rem;cursor:pointer">• List</button><button type="button" onclick="fmtDoc('insertOrderedList')" style="background:none;border:1px solid var(--rule);border-radius:3px;padding:.15rem .45rem;cursor:pointer">1. List</button><select onchange="fmtDoc('formatBlock',this.value);this.value=''" style="font-size:.78rem;border:1px solid var(--rule);border-radius:3px;padding:.15rem .3rem"><option value="">Heading…</option><option value="h3">H3</option><option value="h4">H4</option><option value="p">Normal</option></select></div><div id="task-q" contenteditable="true" style="min-height:80px;padding:.5rem .7rem;font-size:.92rem;outline:none" data-placeholder="Írja be a kérdést…"></div></div></div>
             <div class="field-row">
               <div class="field"><label data-i18n="question_type">Kérdéstípus</label>
                 <select id="task-type" onchange="updateTaskForm()">
@@ -471,6 +479,10 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
                   <option value="text" data-i18n="type_text">Rövid válasz</option>
                   <option value="order" data-i18n="type_order">Sorbarendezés</option>
                   <option value="match" data-i18n="type_match">Párosítás</option>
+                  <option value="truefalse">Igaz / Hamis</option>
+                  <option value="essay">Esszé (manuális)</option>
+                  <option value="numeric">Numerikus válasz</option>
+                  <option value="fileupload">Fájl feltöltés</option>
                 </select>
               </div>
               <div class="field"><label data-i18n="difficulty">Nehézség (1–7)</label>
@@ -501,6 +513,33 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
             <div id="match-fields" style="display:none">
               <div class="field"><label data-i18n="match_pairs_label">Párok — formátum "Bal | Jobb" (soronként egy)</label><textarea id="task-match-pairs" rows="4"></textarea></div>
             </div>
+            <div id="truefalse-fields" style="display:none">
+              <div class="field"><label>Helyes válasz</label>
+                <div style="display:flex;gap:1rem;margin-top:.3rem">
+                  <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="radio" name="tf-correct" value="true" checked> Igaz</label>
+                  <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="radio" name="tf-correct" value="false"> Hamis</label>
+                </div>
+              </div>
+            </div>
+            <div id="essay-fields" style="display:none">
+              <div class="field"><label>Max. szavak száma (0 = korlátlan)</label><input id="task-essay-maxwords" type="number" min="0" value="0"></div>
+            </div>
+            <div id="numeric-fields" style="display:none">
+              <div class="field-row">
+                <div class="field"><label>Helyes szám</label><input id="task-numeric-correct" type="number" step="any"></div>
+                <div class="field"><label>Tolerancia mód</label>
+                  <select id="task-numeric-mode" onchange="document.getElementById('task-numeric-tolerance').closest('.field').style.display=this.value==='tolerance'?'block':'none'">
+                    <option value="exact">Pontos egyezés</option>
+                    <option value="tolerance">Tolerancia (±)</option>
+                  </select>
+                </div>
+                <div class="field" style="display:none"><label>Tolerancia értéke (±)</label><input id="task-numeric-tolerance" type="number" step="any" value="0.5"></div>
+              </div>
+            </div>
+            <div id="fileupload-fields" style="display:none">
+              <div class="field"><label>Engedélyezett fájltípusok (vesszővel elválasztva)</label><input id="task-file-types" type="text" value="pdf,jpg,png,docx"></div>
+            </div>
+            <div class="field"><label>Kép csatolása (opcionális)</label><input type="file" id="task-image" accept="image/*" style="font-size:.85rem"><div id="task-image-preview" style="margin-top:.4rem"></div></div>
             <div id="task-err" class="alert alert-danger" style="display:none;margin-top:.5rem"></div>
           </div>
           <div class="panel-foot"><button class="btn btn-primary" onclick="adminAddTask()" data-i18n="btn_save_task">Mentés a feladatbankba</button></div>
@@ -524,7 +563,7 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
           <div class="panel-head"><h3 data-i18n="register_examinee">Vizsgázó regisztrálása</h3></div>
           <div class="panel-body">
             <div class="field"><label data-i18n="select_exam">Vizsga</label><select id="reg-exam-sel"></select></div>
-            <div class="field"><label data-i18n="examinee_id">Vizsgázói azonosító</label><div style="display:flex;gap:.5rem;align-items:center"><input id="reg-eid" type="text" class="mono" maxlength="16" oninput="this.value=this.value.toUpperCase()" placeholder="OVP-AB12345117"><button type="button" class="btn btn-secondary btn-sm" onclick="generateExamineeId()" title="Azonosító generálása">⟳ Generál</button></div></div>
+            <div class="field"><label data-i18n="examinee_id">Vizsgázói azonosító</label><div style="display:flex;gap:.5rem;align-items:center"><input id="reg-eid" type="text" class="mono" maxlength="16" oninput="this.value=this.value.toUpperCase()" placeholder="AA117NNNNNNNNNC" maxlength="15"><button type="button" class="btn btn-secondary btn-sm" onclick="generateExamineeId()" title="Azonosító generálása">⟳ Generál</button></div></div>
             <div id="reg-msg" style="display:none;margin-top:.5rem"></div>
           </div>
           <div class="panel-foot"><button class="btn btn-primary" onclick="adminRegisterExaminee()" data-i18n="btn_register">Regisztrálás</button></div>
@@ -559,7 +598,7 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
         </div>
         <div style="overflow-x:auto">
           <table class="data-table">
-            <thead><tr><th data-i18n="examinee_id">Vizsgázó</th><th data-i18n="exam_code">Vizsgakód</th><th data-i18n="th_points">Pontszám</th><th data-i18n="th_correct">Helyes</th><th data-i18n="th_status">Állapot</th><th data-i18n="th_submitted">Beadva</th></tr></thead>
+            <thead><tr><th data-i18n="examinee_id">Vizsgázó</th><th data-i18n="exam_code">Vizsgakód</th><th data-i18n="th_points">Pontszám</th><th data-i18n="th_correct">Helyes</th><th data-i18n="th_status">Állapot</th><th data-i18n="th_submitted">Beadva</th><th></th></tr></thead>
             <tbody id="results-body"></tbody>
           </table>
           <div id="no-results-msg" style="text-align:center;padding:2rem;color:var(--muted);font-size:.88rem" data-i18n="no_results">Még nincsenek eredmények.</div>
@@ -739,8 +778,8 @@ function tick() {
 function renderQ() {
   const tasks=session.tasks, i=session.currentQ, t0=tasks[i], total=tasks.length;
   const answered=Object.keys(session.answers).filter(k=>session.answers[k]!==undefined&&session.answers[k]!=='').length;
-  document.getElementById('q-label').textContent = `${t('questions')} ${i+1} ${t('q_of')} ${total}`;
-  document.getElementById('q-text').textContent  = t0.text;
+  document.getElementById('q-label').textContent = `${t('questions')} ${i+1} ${t('q_of')} ${total}${t0.name?' · '+t0.name:''}`;
+  document.getElementById('q-text').innerHTML  = t0.text;
 
   const diffLevels = t('diff_levels');
   document.getElementById('q-diff').innerHTML=`<span class="q-diff-pip"></span>${t('difficulty_label')}: <strong>${t0.difficulty}</strong> — ${diffLevels[t0.difficulty]||t0.difficulty}`;
@@ -759,6 +798,22 @@ function renderQArea(t0, qi) {
   const area=document.getElementById('q-area'); area.innerHTML='';
   const saved=session.answers[qi];
 
+  // Show task name if set
+  if (t0.name) {
+    const nameEl = document.createElement('div');
+    nameEl.style.cssText = 'font-size:.75rem;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem';
+    nameEl.textContent = t0.name;
+    area.appendChild(nameEl);
+  }
+
+  // Show image if attached
+  if (t0.image) {
+    const img = document.createElement('img');
+    img.src = t0.image;
+    img.style.cssText = 'max-width:100%;max-height:240px;border-radius:var(--r);margin-bottom:.8rem;display:block';
+    area.appendChild(img);
+  }
+
   if (t0.type==='mc') {
     const ul=document.createElement('div'); ul.className='options';
     t0.options.forEach((opt,oi)=>{
@@ -768,12 +823,74 @@ function renderQArea(t0, qi) {
       ul.appendChild(div);
     });
     area.appendChild(ul);
+  } else if (t0.type==='truefalse') {
+    const wrap=document.createElement('div');wrap.style.cssText='display:flex;gap:1rem;margin-top:.5rem';
+    ['true','false'].forEach(val=>{
+      const btn=document.createElement('button');
+      btn.className='btn '+(String(saved)===val?'btn-primary':'btn-secondary');
+      btn.style.cssText='flex:1;font-size:1rem;padding:.7rem';
+      btn.textContent=val==='true'?'✓ Igaz':'✗ Hamis';
+      btn.onclick=()=>{session.answers[qi]=val;renderQ();};
+      wrap.appendChild(btn);
+    });
+    area.appendChild(wrap);
   } else if (t0.type==='text') {
     const inp=document.createElement('input');
     inp.type='text';inp.placeholder='…';inp.value=saved||'';
     inp.style.cssText='width:100%;padding:.6rem .85rem;border:1px solid var(--rule);border-radius:var(--r);font-size:.92rem;';
     inp.oninput=()=>{session.answers[qi]=inp.value;renderDots();};
     area.appendChild(inp);
+  } else if (t0.type==='numeric') {
+    const wrap=document.createElement('div');
+    const inp=document.createElement('input');
+    inp.type='number';inp.step='any';inp.placeholder='0';inp.value=saved||'';
+    inp.style.cssText='width:200px;padding:.6rem .85rem;border:1px solid var(--rule);border-radius:var(--r);font-size:.92rem;';
+    inp.oninput=()=>{session.answers[qi]=inp.value;renderDots();};
+    wrap.appendChild(inp);
+    area.appendChild(wrap);
+  } else if (t0.type==='essay') {
+    const ta=document.createElement('textarea');
+    ta.placeholder='Írja be válaszát…';ta.value=saved||'';
+    ta.rows=6;
+    ta.style.cssText='width:100%;padding:.6rem .85rem;border:1px solid var(--rule);border-radius:var(--r);font-size:.92rem;resize:vertical';
+    ta.oninput=()=>{
+      session.answers[qi]=ta.value;renderDots();
+      if(t0.maxWords>0){
+        const wc=ta.value.trim().split(/\s+/).filter(Boolean).length;
+        let counter=area.querySelector('.word-counter');
+        if(!counter){counter=document.createElement('div');counter.className='word-counter';counter.style.cssText='font-size:.75rem;color:var(--muted);margin-top:.3rem;text-align:right';area.appendChild(counter);}
+        counter.textContent=`${wc} / ${t0.maxWords} szó`;
+        counter.style.color=wc>t0.maxWords?'var(--danger)':'var(--muted)';
+      }
+    };
+    area.appendChild(ta);
+    if(t0.maxWords>0){
+      const counter=document.createElement('div');counter.className='word-counter';
+      counter.style.cssText='font-size:.75rem;color:var(--muted);margin-top:.3rem;text-align:right';
+      counter.textContent=`0 / ${t0.maxWords} szó`;area.appendChild(counter);
+    }
+  } else if (t0.type==='fileupload') {
+    const wrap=document.createElement('div');
+    if(saved && saved.name){
+      const info=document.createElement('div');
+      info.style.cssText='padding:.5rem;background:var(--success-l);border-radius:var(--r);font-size:.85rem;margin-bottom:.5rem';
+      info.textContent=`✓ Feltöltött: ${saved.name}`;wrap.appendChild(info);
+    }
+    const inp=document.createElement('input');inp.type='file';
+    if(t0.allowedTypes) inp.accept=t0.allowedTypes.map(e=>'.'+e).join(',');
+    inp.style.cssText='font-size:.85rem';
+    inp.onchange=async()=>{
+      const file=inp.files[0];if(!file)return;
+      if(file.size>5*1024*1024){alert('Max. fájlméret: 5MB');return;}
+      const b64=await fileToBase64(file);
+      session.answers[qi]={name:file.name,type:file.type,data:b64};
+      renderDots();
+      const info=wrap.querySelector('.upload-info')||document.createElement('div');
+      info.className='upload-info';info.style.cssText='padding:.4rem;background:var(--success-l);border-radius:var(--r);font-size:.82rem;margin-top:.4rem';
+      info.textContent=`✓ ${file.name}`;wrap.appendChild(info);
+    };
+    wrap.appendChild(inp);
+    area.appendChild(wrap);
   } else if (t0.type==='order') {
     const order=saved||t0.items.map((_,i)=>i);
     const ul=document.createElement('div');ul.className='order-list';
@@ -873,17 +990,55 @@ function renderResultView(rec) {
   setTimeout(()=>{document.getElementById('rv-band').style.width=Math.round(rec.points/2500*100)+'%';},80);
 
   const reviewEl=document.getElementById('rv-review');reviewEl.innerHTML='';
+
+  // Branch navigation bar
+  const branchNav=document.createElement('div');
+  branchNav.style.cssText='display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1rem';
+  (rec.review||[]).forEach((r,i)=>{
+    const btn=document.createElement('button');
+    let color='var(--rule)';
+    if(r.needsManualGrade) color='var(--warn)';
+    else if(r.correct) color='var(--success)';
+    else if(['essay','fileupload'].includes(r.type)) color='var(--muted)';
+    else color='var(--danger)';
+    btn.style.cssText=`width:2rem;height:2rem;border-radius:50%;border:2px solid ${color};background:transparent;cursor:pointer;font-size:.75rem;font-weight:600;color:${color}`;
+    btn.textContent=i+1;
+    btn.onclick=()=>{
+      document.querySelectorAll('.review-item').forEach((el,j)=>{
+        el.style.display=j===i?'block':'none';
+      });
+      branchNav.querySelectorAll('button').forEach((b,j)=>b.style.fontWeight=j===i?'800':'600');
+    };
+    branchNav.appendChild(btn);
+  });
+  // Show all button
+  const showAllBtn=document.createElement('button');
+  showAllBtn.style.cssText='padding:.2rem .6rem;border:1px solid var(--rule);border-radius:var(--r);background:none;cursor:pointer;font-size:.78rem;color:var(--muted)';
+  showAllBtn.textContent='Összes';
+  showAllBtn.onclick=()=>document.querySelectorAll('.review-item').forEach(el=>el.style.display='block');
+  branchNav.appendChild(showAllBtn);
+  reviewEl.appendChild(branchNav);
+
   (rec.review||[]).forEach((r,i)=>{
     const div=document.createElement('div');
+    div.className='review-item';
     div.style.cssText='border:1px solid var(--rule);border-radius:var(--r);padding:.95rem;margin-bottom:.6rem';
-    const diffLevels=t('diff_levels');
+    const isManual=['essay','fileupload'].includes(r.type);
+    const statusHtml = isManual
+      ? (r.manualGrade
+          ? `<span style="color:var(--success)">✓ Értékelve: ${r.manualGrade.points}/100</span>`
+          : `<span style="color:var(--warn)">⏳ Értékelés folyamatban</span>`)
+      : (r.correct
+          ? `<span style="color:var(--success)">✓ ${t('correct')}</span>`
+          : `<span style="color:var(--danger)">✗ ${t('incorrect')}</span>`);
     div.innerHTML=`
-      <div style="font-size:.72rem;color:var(--muted);margin-bottom:.3rem">
-        Q${i+1} · ${t('difficulty_label')} ${r.difficulty} · ${r.correct?`<span style="color:var(--success)">✓ ${t('correct')}</span>`:`<span style="color:var(--danger)">✗ ${t('incorrect')}</span>`}
+      <div style="font-size:.72rem;color:var(--muted);margin-bottom:.3rem;display:flex;align-items:center;gap:.5rem">
+        ${r.name?`<strong>${r.name}</strong> ·`:''} Q${i+1} · ${t('difficulty_label')} ${r.difficulty} · ${statusHtml}
       </div>
-      <div style="font-family:'EB Garamond',serif;font-size:1.1rem;margin-bottom:.45rem">${r.question}</div>
+      <div style="font-family:'EB Garamond',serif;font-size:1.05rem;margin-bottom:.45rem">${r.question}</div>
       <div style="font-size:.82rem;color:var(--mid)">${t('your_answer')}: <strong>${formatAnsDisplay(r.yourAnswer)}</strong></div>
-      ${!r.correct?`<div style="font-size:.82rem;color:var(--success);margin-top:.2rem">${t('correct_answer')}: <strong>${r.correctAnswer}</strong></div>`:''}`;
+      ${r.manualGrade && r.manualGrade.feedback ? `<div style="font-size:.82rem;color:var(--mid);margin-top:.2rem;font-style:italic">Visszajelzés: ${r.manualGrade.feedback}</div>` : ''}
+      ${!r.correct && !isManual ?`<div style="font-size:.82rem;color:var(--success);margin-top:.2rem">${t('correct_answer')}: <strong>${r.correctAnswer}</strong></div>`:''}`;
     reviewEl.appendChild(div);
   });
   go('result-view');
@@ -959,7 +1114,7 @@ function renderExamList() {
     const totalWeight = examTasks.reduce((s,tk)=>s+DIFF_WEIGHT[tk.difficulty],0);
     const tr=document.createElement('tr');
     tr.style.cursor='pointer';
-    tr.innerHTML=`<td><code style="font-size:.8rem">${e.code}</code></td><td>${e.title}</td><td>${e.taskIds.length}</td><td>${e.timeMins} ${t('min_placeholder')}</td><td><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteExam('${e.code}')">✕</button></td>`;
+    tr.innerHTML=`<td><code style="font-size:.8rem">${e.code}</code></td><td>${e.title}</td><td>${e.taskIds.length}</td><td>${e.timeMins} ${t('min_placeholder')}</td><td style="white-space:nowrap"><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();printExam('${e.code}')">🖨</button> <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteExam('${e.code}')">✕</button></td>`;
     tbody.appendChild(tr);
     // Task detail row (collapsed by default)
     if (examTasks.length > 0) {
@@ -1003,12 +1158,27 @@ function renderMcOpts(){
 }
 function addMcOpt(){mcOpts.push({text:'',correct:false});renderMcOpts();}
 
+function fmtDoc(cmd, val) {
+  document.getElementById('task-q').focus();
+  document.execCommand(cmd, false, val || null);
+}
+
+function getTaskText() {
+  const el = document.getElementById('task-q');
+  return el ? el.innerHTML.trim() : '';
+}
+
+function clearTaskText() {
+  const el = document.getElementById('task-q');
+  if (el) el.innerHTML = '';
+}
+
 function updateTaskForm(){
   const type=document.getElementById('task-type').value;
-  document.getElementById('mc-fields').style.display   =type==='mc'    ?'block':'none';
-  document.getElementById('text-fields').style.display =type==='text'  ?'block':'none';
-  document.getElementById('order-fields').style.display=type==='order' ?'block':'none';
-  document.getElementById('match-fields').style.display=type==='match' ?'block':'none';
+  ['mc','text','order','match','truefalse','essay','numeric','fileupload'].forEach(t=>{
+    const el=document.getElementById(t+'-fields');
+    if(el) el.style.display=type===t?'block':'none';
+  });
 }
 
 async function adminAddTask(){
@@ -1056,7 +1226,9 @@ function renderTaskBank(){
   cachedTasks.forEach((tk,i)=>{
     const pts=taskPoints(tk);
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td style="color:var(--muted)">${i+1}</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${tk.text}</td><td><span class="badge badge-blue">${tk.type.toUpperCase()}</span></td><td>${tk.difficulty}</td><td>${pts}</td><td style="white-space:nowrap"><button class="btn btn-secondary btn-sm" onclick="viewEditTask('${tk.id}')">✎</button> <button class="btn btn-danger btn-sm" onclick="deleteTask('${tk.id}')">✕</button></td>`;
+    const displayName = tk.name ? `<div style="font-size:.72rem;color:var(--accent);font-weight:600">${tk.name}</div>` : '';
+    const displayText = tk.text.replace(/<[^>]+>/g,'').substring(0,60);
+    tr.innerHTML=`<td style="color:var(--muted)">${i+1}</td><td style="max-width:200px">${displayName}<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.85rem">${displayText}</div></td><td><span class="badge badge-blue">${tk.type.toUpperCase()}</span></td><td>${tk.difficulty}</td><td>${pts}</td><td style="white-space:nowrap"><button class="btn btn-secondary btn-sm" onclick="viewEditTask('${tk.id}')">✎</button> <button class="btn btn-danger btn-sm" onclick="deleteTask('${tk.id}')">✕</button></td>`;
     tbody.appendChild(tr);
   });
   const badge=document.getElementById('task-count-badge');
@@ -1109,7 +1281,8 @@ async function loadResults(){
     records.slice().sort((a,b)=>a.examCode.localeCompare(b.examCode)).forEach(r=>{
       const exam=cachedExams.find(e=>e.code===r.examCode);
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td><code>${r.examineeId}</code></td><td><code>${r.examCode}</code></td><td><strong>${r.points}</strong> / 2500</td><td>${r.correct} / ${r.total}</td><td><span class="badge ${r.released?'badge-green':'badge-grey'}">${r.released?t('status_published'):t('status_pending')}</span></td><td style="font-size:.78rem;color:var(--muted)">${new Date(r.submittedAt).toLocaleString()}</td>`;
+      const hasManual = cachedExams.find(e=>e.code===r.examCode)?.taskIds?.some(id=>cachedTasks.find(tk=>tk.id===id&&['essay','fileupload'].includes(tk.type)));
+      tr.innerHTML=`<td><code>${r.examineeId}</code></td><td><code>${r.examCode}</code></td><td><strong>${r.points}</strong> / 2500</td><td>${r.correct} / ${r.total}</td><td><span class="badge ${r.released?'badge-green':'badge-grey'}">${r.released?t('status_published'):t('status_pending')}</span></td><td style="font-size:.78rem;color:var(--muted)">${new Date(r.submittedAt).toLocaleString()}</td><td style="white-space:nowrap">${hasManual?`<button class="btn btn-secondary btn-sm" onclick="openManualGrade('${r.examCode}','${r.examineeId}')">✎ Értékel</button> `:''}<button class="btn btn-secondary btn-sm" onclick="printNotification('${r.examCode}','${r.examineeId}')">🖨 Értesítő</button></td>`;
       tbody.appendChild(tr);
     });
   } catch(e){console.error(e);}
@@ -1173,13 +1346,50 @@ function setBtnLoading(id,on){const el=document.getElementById(id);if(!el)return
 // ═══════════════════════════════════════════════════════════════
 //  EXAMINEE ID GENERATOR
 // ═══════════════════════════════════════════════════════════════
+// ── Checksum algorithm ──
+// Format: AA117NNNNNNNNNC
+// AA = 2 letters, 117 = fixed, NNNNNNNNN = 9 digits, C = checksum letter
+// Checksum: sum of (charCode * position) mod 23, mapped to letter alphabet
+function calcChecksum(base) {
+  const ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // 23 chars (no I or O)
+  let sum = 0;
+  for (let i = 0; i < base.length; i++) {
+    const c = base[i];
+    const val = isNaN(c) ? c.charCodeAt(0) : parseInt(c);
+    sum += val * (i + 1);
+  }
+  return ALPHA[sum % ALPHA.length];
+}
+
 function generateExamineeId() {
-  const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // no I or O to avoid confusion
-  const ll = letters[Math.floor(Math.random()*letters.length)] +
-             letters[Math.floor(Math.random()*letters.length)];
-  const nnnnn = String(Math.floor(Math.random()*90000)+10000); // 9 digits, 100000000-999999999
-  const id = `OVP-${ll}${nnnnnnnnn}117`;
+  const ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const aa = ALPHA[Math.floor(Math.random()*ALPHA.length)] + ALPHA[Math.floor(Math.random()*ALPHA.length)];
+  const nnn = String(Math.floor(Math.random()*900000000)+100000000); // 9 digits
+  const base = aa + '117' + nnn;
+  const c = calcChecksum(base);
+  const id = base + c;
   document.getElementById('reg-eid').value = id;
+}
+
+function validateIdField(input) {
+  const id = input.value.trim();
+  if (id.length === 15) {
+    const valid = validateExamineeId(id);
+    input.style.borderColor = valid ? 'var(--success)' : 'var(--danger)';
+    input.title = valid ? 'Érvényes azonosító' : 'Érvénytelen azonosító (hibás ellenőrzőjegy)';
+  } else {
+    input.style.borderColor = '';
+    input.title = '';
+  }
+}
+
+function validateExamineeId(id) {
+  if (!id || id.length !== 15) return false;
+  const ALPHA = /^[ABCDEFGHJKLMNPQRSTUVWXYZ]{2}117[0-9]{9}[ABCDEFGHJKLMNPQRSTUVWXYZ]$/;
+  if (!ALPHA.test(id)) return false;
+  const base = id.slice(0, 14);
+  const check = id[14];
+  return calcChecksum(base) === check;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1631,6 +1841,266 @@ async function exportExamineesPDF() {
   doc.text(`${rows.length} vizsgazo`, 14, y + 10);
 
   doc.save(`obscuron-vizsgazok-${examCode}-${new Date().toISOString().slice(0,10)}.pdf`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  FILE TO BASE64 HELPER
+// ═══════════════════════════════════════════════════════════════
+function fileToBase64(file) {
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>res(r.result);
+    r.onerror=rej;
+    r.readAsDataURL(file);
+  });
+}
+
+document.addEventListener('change', e=>{
+  if(e.target.id==='task-image' && e.target.files[0]){
+    const prev=document.getElementById('task-image-preview');
+    if(prev){ const url=URL.createObjectURL(e.target.files[0]); prev.innerHTML=`<img src="${url}" style="max-height:120px;max-width:100%;border-radius:var(--r);border:1px solid var(--rule)">`; }
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  PRINT EXAM
+// ═══════════════════════════════════════════════════════════════
+async function printExam(examCode) {
+  const exam = cachedExams.find(e=>e.code===examCode);
+  if (!exam) return;
+  const examTasks = exam.taskIds.map(id=>cachedTasks.find(tk=>tk.id===id)).filter(Boolean);
+
+  const win = window.open('','_blank');
+  const logo = cachedLogo ? `<img src="${cachedLogo}" style="height:48px;margin-bottom:.5rem">` : '';
+
+  let tasksHtml = '';
+  examTasks.forEach((tk,i)=>{
+    const typeLabels = {mc:'Feleletválasztós',text:'Rövid válasz',order:'Sorbarendezés',match:'Párosítás',truefalse:'Igaz/Hamis',essay:'Esszé',numeric:'Numerikus',fileupload:'Fájl feltöltés'};
+    let answerHtml = '';
+    if(tk.type==='mc'){
+      answerHtml = tk.options.map((opt,oi)=>`<div style="margin:.3rem 0;display:flex;gap:.5rem;align-items:center"><span style="width:1.2rem;height:1.2rem;border:1.5px solid #333;border-radius:50%;display:inline-block"></span> <strong>${String.fromCharCode(65+oi)}.</strong> ${opt}${oi===tk.correctIdx?' <span style="color:green">(✓)</span>':''}</div>`).join('');
+    } else if(tk.type==='truefalse'){
+      answerHtml = `<div style="margin:.3rem 0">Helyes válasz: <strong>${tk.correctAnswer?'Igaz':'Hamis'}</strong></div>`;
+    } else if(tk.type==='text'){
+      answerHtml = `<div style="margin:.3rem 0;color:#555">Elfogadott kulcsszavak: <em>${tk.keywords.join(', ')}</em></div><div style="margin:.5rem 0;border-bottom:1px solid #ccc;height:1.5rem"></div>`;
+    } else if(tk.type==='numeric'){
+      answerHtml = `<div style="margin:.3rem 0;color:#555">Helyes szám: <strong>${tk.correctNumber}</strong>${tk.useTolerance?` (±${tk.tolerance})`:''}</div><div style="margin:.5rem 0;border:1px solid #ccc;padding:.3rem;width:8rem;display:inline-block"></div>`;
+    } else if(tk.type==='essay'){
+      const lines = tk.maxWords>0?Math.ceil(tk.maxWords/8):6;
+      answerHtml = Array(lines).fill('<div style="border-bottom:1px solid #ccc;margin:.4rem 0;height:1.4rem"></div>').join('');
+    } else if(tk.type==='order'){
+      answerHtml = tk.items.map((item,j)=>`<div style="margin:.3rem 0;display:flex;gap:.5rem;align-items:center"><span style="width:1.4rem;height:1.4rem;border:1px solid #ccc;display:inline-block;text-align:center">__</span> ${item}</div>`).join('');
+    } else if(tk.type==='match'){
+      answerHtml = `<table style="border-collapse:collapse;width:100%">${tk.pairs.map(([l,r])=>`<tr><td style="padding:.3rem .5rem;border:1px solid #ccc;width:45%">${l}</td><td style="padding:.3rem;border:1px solid #ccc;width:10%;text-align:center">→</td><td style="padding:.3rem .5rem;border:1px solid #ccc;width:45%">${r}</td></tr>`).join('')}</table>`;
+    }
+    tasksHtml += `
+      <div style="margin-bottom:1.5rem;page-break-inside:avoid">
+        <div style="font-size:.8rem;color:#666;margin-bottom:.2rem">${tk.name?`<strong>${tk.name}</strong> · `:''}${i+1}. feladat · ${typeLabels[tk.type]||tk.type} · Nehézség: ${tk.difficulty}</div>
+        ${tk.image?`<img src="${tk.image}" style="max-height:160px;max-width:100%;margin:.4rem 0;display:block">` : ''}
+        <div style="font-size:1rem;margin-bottom:.5rem">${tk.text}</div>
+        ${answerHtml}
+      </div>`;
+  });
+
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${exam.title}</title>
+  <style>
+    body{font-family:Georgia,serif;font-size:13px;margin:2cm;color:#111}
+    h1{font-size:1.3rem;margin-bottom:.2rem}
+    h2{font-size:.95rem;font-weight:normal;color:#555;margin-bottom:1rem;border-bottom:1px solid #ccc;padding-bottom:.4rem}
+    @media print{body{margin:1.5cm}}
+  </style></head><body>
+  <div style="text-align:center;margin-bottom:1.5rem">${logo}<h1>${exam.title}</h1><h2>Vizsgakód: ${exam.code} · Kategória: ${exam.category||'—'} · Időkorlát: ${exam.timeMins} perc</h2></div>
+  ${exam.desc?`<div style="margin-bottom:1rem;font-style:italic;color:#555">${exam.desc}</div>`:''}
+  <div style="margin-bottom:1rem;display:flex;gap:2rem">
+    <div>Vizsgázó azonosítója: <span style="border-bottom:1px solid #333;display:inline-block;width:8rem"></span></div>
+    <div>Dátum: <span style="border-bottom:1px solid #333;display:inline-block;width:6rem"></span></div>
+  </div>
+  <hr style="margin-bottom:1.2rem">
+  ${tasksHtml}
+  <div style="margin-top:2rem;border-top:1px solid #ccc;padding-top:.8rem;font-size:.8rem;color:#888;text-align:center">Obscuron Vizsgaportál · ${exam.code} · ${new Date().toLocaleDateString('hu-HU')}</div>
+  </body></html>`);
+  win.document.close();
+  setTimeout(()=>win.print(), 500);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  MANUAL GRADING MODAL
+// ═══════════════════════════════════════════════════════════════
+async function openManualGrade(examCode, examineeId) {
+  const record = await apiGet(`/api/admin/results`).then(rs=>rs.find(r=>r.examCode===examCode&&r.examineeId===examineeId)).catch(()=>null);
+  const exam = cachedExams.find(e=>e.code===examCode);
+  if (!exam) return;
+  const manualTasks = exam.taskIds.map(id=>cachedTasks.find(tk=>tk.id===id)).filter(tk=>tk&&['essay','fileupload'].includes(tk.type));
+  if (!manualTasks.length) { alert('Nincs manuálisan értékelhető feladat.'); return; }
+
+  const modal = document.createElement('div');
+  modal.id = 'manual-grade-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem';
+
+  const box = document.createElement('div');
+  box.style.cssText = 'background:var(--white);border-radius:var(--r);width:100%;max-width:600px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2)';
+
+  box.innerHTML = `<div style="padding:1.2rem 1.5rem;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center">
+    <h3 style="margin:0;font-size:1rem">Manuális értékelés — ${examineeId}</h3>
+    <button onclick="document.getElementById('manual-grade-modal').remove()" style="background:none;border:none;font-size:1.2rem;cursor:pointer">✕</button>
+  </div>`;
+
+  const body = document.createElement('div');
+  body.style.cssText = 'padding:1.2rem 1.5rem';
+
+  manualTasks.forEach((tk,i)=>{
+    const ans = record?.answers?.[exam.taskIds.indexOf(tk.id)];
+    const existing = record?.manualGrades?.[tk.id];
+    const section = document.createElement('div');
+    section.style.cssText = 'margin-bottom:1.2rem;padding-bottom:1.2rem;border-bottom:1px solid var(--rule)';
+
+    let ansDisplay = '';
+    if (tk.type==='essay') {
+      ansDisplay = `<div style="background:var(--off);border-radius:var(--r);padding:.6rem .8rem;font-size:.88rem;margin:.4rem 0;max-height:120px;overflow-y:auto;white-space:pre-wrap">${ans||'(nincs válasz)'}</div>`;
+    } else if (tk.type==='fileupload' && ans && ans.name) {
+      ansDisplay = `<div style="padding:.4rem;background:var(--accent-l);border-radius:var(--r);font-size:.85rem;margin:.4rem 0">📎 ${ans.name}</div>`;
+    }
+
+    section.innerHTML = `
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:.3rem">${tk.name?`<strong>${tk.name}</strong> ·`:''} ${i+1}. feladat · ${tk.type==='essay'?'Esszé':'Fájl feltöltés'}</div>
+      <div style="font-size:.92rem;margin-bottom:.4rem">${tk.text}</div>
+      ${ansDisplay}
+      <div style="display:flex;gap:.8rem;align-items:flex-end;margin-top:.6rem">
+        <div class="field" style="margin:0;flex:0 0 auto">
+          <label style="font-size:.8rem">Pontszám (0–100)</label>
+          <input type="number" id="mg-pts-${tk.id}" min="0" max="100" value="${existing?.points??''}" style="width:80px;padding:.35rem .5rem;border:1px solid var(--rule);border-radius:var(--r)">
+        </div>
+        <div class="field" style="margin:0;flex:1">
+          <label style="font-size:.8rem">Visszajelzés (opcionális)</label>
+          <input type="text" id="mg-fb-${tk.id}" value="${existing?.feedback||''}" style="width:100%;padding:.35rem .5rem;border:1px solid var(--rule);border-radius:var(--r)">
+        </div>
+      </div>`;
+    body.appendChild(section);
+  });
+
+  box.appendChild(body);
+
+  const footer = document.createElement('div');
+  footer.style.cssText = 'padding:1rem 1.5rem;border-top:1px solid var(--rule);display:flex;justify-content:flex-end;gap:.5rem';
+  footer.innerHTML = '<button class="btn btn-secondary" onclick="document.getElementById('manual-grade-modal').remove()">Mégse</button>';
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'btn btn-primary';
+  saveBtn.textContent = 'Mentés';
+  saveBtn.onclick = async () => {
+    for (const tk of manualTasks) {
+      const pts = parseInt(document.getElementById(`mg-pts-${tk.id}`)?.value);
+      if (isNaN(pts)) continue;
+      const fb = document.getElementById(`mg-fb-${tk.id}`)?.value || '';
+      await apiPost('/api/admin/tasks/grade', { taskId: tk.id, examCode, examineeId, points: pts, feedback: fb }).catch(e=>alert(e.message));
+    }
+    document.getElementById('manual-grade-modal').remove();
+    await refreshAdminData();
+  };
+  footer.appendChild(saveBtn);
+  box.appendChild(footer);
+  modal.appendChild(box);
+  document.body.appendChild(modal);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RESULT NOTIFICATION PRINT
+// ═══════════════════════════════════════════════════════════════
+async function printNotification(examCode, examineeId) {
+  const records = await apiGet(`/api/admin/results?examCode=${examCode}`).catch(()=>[]);
+  const record = (Array.isArray(records)?records:[]).find(r=>r.examineeId===examineeId);
+  if (!record) { alert('Nem található eredmény.'); return; }
+
+  const exam = cachedExams.find(e=>e.code===examCode);
+  const grade = pointsToGrade(record.points);
+  const gradeLabels = {grade_outstanding:'Kiváló',grade_excellent:'Jeles',grade_proficient:'Jó',grade_developing:'Közepes',grade_beginning:'Kezdő'};
+  const gradeLabel = gradeLabels[grade.labelKey] || '—';
+  const logo = cachedLogo ? `<img src="${cachedLogo}" style="height:52px">` : '<div style="width:52px;height:52px;border:2px solid #1b4f8a;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#1b4f8a;font-weight:bold;font-size:1.1rem">OVP</div>';
+  const pct = Math.round(record.points/2500*100);
+  const today = new Date().toLocaleDateString('hu-HU',{year:'numeric',month:'long',day:'numeric'});
+
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Értesítő — ${examineeId}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Georgia',serif;font-size:13px;color:#111;background:#fff}
+    .page{width:210mm;min-height:148mm;margin:0 auto;padding:1.5cm 2cm;border:1px solid #ccc}
+    .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1b4f8a;padding-bottom:.8rem;margin-bottom:1.2rem}
+    .header-text h1{font-size:1.2rem;color:#1b4f8a;margin-bottom:.15rem}
+    .header-text p{font-size:.78rem;color:#666}
+    .title{text-align:center;margin-bottom:1.2rem}
+    .title h2{font-size:1rem;font-weight:normal;letter-spacing:.08em;text-transform:uppercase;color:#555;margin-bottom:.2rem}
+    .title h3{font-size:.9rem;font-weight:normal;color:#888}
+    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem 2rem;margin-bottom:1.2rem}
+    .info-row{display:flex;gap:.4rem;font-size:.88rem;border-bottom:1px dotted #ccc;padding:.2rem 0}
+    .info-label{color:#666;min-width:7rem}
+    .info-value{font-weight:600}
+    .score-box{background:#f0f5fc;border:1px solid #b8cfe8;border-radius:4px;padding:.8rem 1.2rem;margin-bottom:1.2rem;display:flex;align-items:center;gap:1.5rem}
+    .score-num{font-size:2rem;font-weight:bold;color:#1b4f8a}
+    .score-grade{font-size:1.1rem;font-weight:600;color:#1b4f8a}
+    .score-bar-wrap{flex:1;background:#d0dff0;border-radius:99px;height:8px;margin-top:.3rem}
+    .score-bar{background:#1b4f8a;border-radius:99px;height:8px;width:${pct}%}
+    .footer{display:flex;justify-content:space-between;align-items:flex-end;margin-top:1.5rem;padding-top:.8rem;border-top:1px solid #ccc;font-size:.78rem;color:#888}
+    .sig-line{border-bottom:1px solid #333;width:9rem;margin-bottom:.2rem}
+    @media print{.page{border:none;padding:1cm 1.5cm}}
+  </style></head><body>
+  <div class="page">
+    <div class="header">
+      <div style="display:flex;align-items:center;gap:.8rem">
+        ${logo}
+        <div class="header-text">
+          <h1>Obscuron Vizsgaportál</h1>
+          <p>Hivatalos Vizsgaeredmény Értesítő</p>
+        </div>
+      </div>
+      <div style="font-size:.78rem;color:#888;text-align:right">Kiállítva: ${today}<br>Dokumentum azonosító: ${examCode}-${examineeId}</div>
+    </div>
+
+    <div class="title">
+      <h2>Vizsgaeredmény Értesítő</h2>
+      <h3>${exam?.title||examCode} · Vizsgakód: ${examCode}</h3>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-row"><span class="info-label">Vizsgázó azonosító:</span><span class="info-value">${examineeId}</span></div>
+      <div class="info-row"><span class="info-label">Vizsga neve:</span><span class="info-value">${exam?.title||'—'}</span></div>
+      <div class="info-row"><span class="info-label">Vizsgakód:</span><span class="info-value">${examCode}</span></div>
+      <div class="info-row"><span class="info-label">Kategória:</span><span class="info-value">${exam?.category||'—'}</span></div>
+      <div class="info-row"><span class="info-label">Beadás időpontja:</span><span class="info-value">${new Date(record.submittedAt).toLocaleString('hu-HU')}</span></div>
+      <div class="info-row"><span class="info-label">Felhasznált idő:</span><span class="info-value">${Math.floor((record.timeUsed||0)/60)}p ${(record.timeUsed||0)%60}mp</span></div>
+    </div>
+
+    <div class="score-box">
+      <div>
+        <div style="font-size:.75rem;color:#666;margin-bottom:.1rem">Elért pontszám</div>
+        <div class="score-num">${record.points} <span style="font-size:1rem;color:#666">/ 2500</span></div>
+        <div class="score-bar-wrap"><div class="score-bar"></div></div>
+      </div>
+      <div style="border-left:1px solid #b8cfe8;padding-left:1.5rem">
+        <div style="font-size:.75rem;color:#666;margin-bottom:.1rem">Minősítés</div>
+        <div class="score-grade">${gradeLabel}</div>
+        <div style="font-size:.78rem;color:#888;margin-top:.2rem">${pct}% · ${record.correct}/${record.total} helyes</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>
+        <div style="margin-bottom:1.5rem"></div>
+        <div class="sig-line"></div>
+        <div>Értékelő aláírása</div>
+      </div>
+      <div style="text-align:center">
+        <div style="margin-bottom:1.5rem"></div>
+        <div class="sig-line" style="margin:0 auto"></div>
+        <div>Dátum</div>
+      </div>
+      <div style="text-align:right;font-size:.72rem;color:#aaa">
+        Obscuron Vizsgaportál<br>obscuron.org
+      </div>
+    </div>
+  </div>
+  </body></html>`);
+  win.document.close();
+  setTimeout(()=>win.print(), 500);
 }
 
 // ═══════════════════════════════════════════════════════════════

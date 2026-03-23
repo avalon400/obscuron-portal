@@ -65,6 +65,7 @@ export default {
         if (path === '/api/admin/tasks'         && method === 'POST') return handleCORS(await taskRoutes.create(request, env));
         if (path === '/api/admin/tasks'         && method === 'DELETE') return handleCORS(await taskRoutes.remove(request, env));
         if (path === '/api/admin/tasks'         && method === 'PUT') return handleCORS(await taskRoutes.update(request, env));
+        if (path === '/api/admin/tasks/grade'    && method === 'POST') return handleCORS(await taskRoutes.grade(request, env));
 
         // Examinees
         if (path === '/api/admin/examinees'     && method === 'POST') return handleCORS(await examineeRoutes.register(request, env));

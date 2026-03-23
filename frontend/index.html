@@ -206,14 +206,14 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
 <!-- ═══════════ WELCOME ═══════════ -->
 <div id="screen-welcome" class="screen active">
   <div class="welcome-inner">
-    <div class="welcome-icon">🎓</div>
-    <h1 data-i18n="welcome_title">KompetenciaKapu</h1>
-    <p class="subtitle" style="font-size:.95rem;margin-top:.4rem" data-i18n="welcome_sub">Hivatalos Kompetencia Vizsgáztató Platform</p>
-    <p style="color:var(--muted);margin-top:1rem;font-size:.9rem;line-height:1.6" data-i18n="welcome_desc">Adja meg vizsgaazonosítóját a vizsga megkezdéséhez, vagy lépjen be az adminisztrátori felületre.</p>
+    <div class="welcome-icon">OVP</div>
+    <h1 data-i18n="welcome_title">Obscuron Vizsgaportál</h1>
+    <p class="subtitle" style="font-size:.95rem;margin-top:.4rem" data-i18n="welcome_sub">Az Obscuron Vizsgaportál korszerű megoldásokat kínál fejlődő szervezetek számára.</p>
+    <p style="color:var(--muted);margin-top:1rem;font-size:.9rem;line-height:1.6" data-i18n="welcome_desc">Adja meg vizsgázói kódját a vizsga megkezdéséhez, vagy lépjen be a vizsgáztatói felületre.</p>
     <div class="welcome-actions">
       <button class="btn btn-primary" onclick="go('login')" data-i18n="btn_start_exam">Vizsga megkezdése</button>
-      <button class="btn btn-secondary" onclick="go('result-lookup')" data-i18n="btn_view_result">Eredmény megtekintése</button>
-      <button class="btn btn-secondary" onclick="go('admin-login')" data-i18n="btn_admin">Adminisztrátor</button>
+      <button class="btn btn-secondary" onclick="go('result-lookup')" data-i18n="btn_view_result">Eredmény lekérdezése</button>
+      <button class="btn btn-secondary" onclick="go('admin-login')" data-i18n="btn_admin">Vizsgáztatóknak</button>
     </div>
   </div>
 </div>
@@ -224,27 +224,27 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
     <div class="panel">
       <div class="panel-head">
         <h2 data-i18n="login_title">Vizsgázó azonosítása</h2>
-        <p class="subtitle" data-i18n="login_sub">Adja meg intézménye által kiadott vizsgakódot és vizsgázói azonosítót.</p>
+        <p class="subtitle" data-i18n="login_sub">Adja meg a vizsgáztatója által kiadott vizsgakódot és vizsgázói azonosítót.</p>
       </div>
       <div class="panel-body">
         <div class="alert alert-info" style="margin-bottom:1.4rem">
-          <span>ℹ️</span><span data-i18n="login_info">Az azonosítókat a vizsgáztató intézmény bocsátja ki. Probléma esetén forduljon a felügyelőhöz.</span>
+          <span></span><span data-i18n="login_info">Az azonosítókat a vizsgáztató bocsátja ki. Probléma esetén forduljon hozzá!</span>
         </div>
         <div class="field">
           <label data-i18n="exam_code">Vizsgakód</label>
-          <input id="login-code" type="text" class="mono" placeholder="pl. VIZSGA-2025-001" maxlength="24" oninput="this.value=this.value.toUpperCase()">
-          <div class="field-hint" data-i18n="exam_code_hint">A vizsgáztatói kör által kiadott egyedi kód.</div>
+          <input id="login-code" type="text" class="mono" placeholder="pl. VIZSGA001" maxlength="24" oninput="this.value=this.value.toUpperCase()">
+          <div class="field-hint" data-i18n="exam_code_hint">A vizsgáztató által kiadott egyedi kód.</div>
         </div>
         <div class="field">
           <label data-i18n="examinee_id">Vizsgázói azonosító</label>
-          <input id="login-eid" type="text" class="mono" placeholder="pl. VZ-00042" maxlength="14" oninput="this.value=this.value.toUpperCase()">
-          <div class="field-hint" data-i18n="examinee_id_hint">Az intézmény által kiadott személyes azonosító.</div>
+          <input id="login-eid" type="text" class="mono" placeholder="pl. VZ-00042" maxlength="15" oninput="this.value=this.value.toUpperCase()">
+          <div class="field-hint" data-i18n="examinee_id_hint">A vizsgáztató által kiadott egyedi azonosító.</div>
         </div>
         <div id="login-err" class="alert alert-danger" style="display:none;margin-top:.6rem"></div>
       </div>
       <div class="panel-foot">
-        <button class="btn btn-secondary" onclick="go('welcome')" data-i18n="btn_back">← Vissza</button>
-        <button class="btn btn-primary" onclick="doLogin()" id="login-btn" data-i18n="btn_verify">Ellenőrzés és folytatás →</button>
+        <button class="btn btn-secondary" onclick="go('welcome')" data-i18n="btn_back">Vissza</button>
+        <button class="btn btn-primary" onclick="doLogin()" id="login-btn" data-i18n="btn_verify">Ellenőrzés és elkezdés</button>
       </div>
     </div>
   </div>
@@ -271,12 +271,12 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
         <h3 style="margin-bottom:.8rem" data-i18n="instructions_heading">Útmutató</h3>
         <ul id="instr-list" style="padding-left:1.2rem;display:flex;flex-direction:column;gap:.55rem;font-size:.9rem;color:var(--mid)"></ul>
         <div class="alert alert-warn" style="margin-top:1.4rem">
-          <span>⚠️</span><span data-i18n="instr_warn">Ne zárja be és ne frissítse az oldalt a vizsga közben. Az előrehaladás nem állítható vissza.</span>
+          <span>❗</span><span data-i18n="instr_warn">Ne zárja be és ne frissítse az oldalt a vizsga közben. A kitöltés nem állítható vissza.</span>
         </div>
       </div>
       <div class="panel-foot">
-        <button class="btn btn-secondary" onclick="go('login')" data-i18n="btn_back">← Vissza</button>
-        <button class="btn btn-primary" onclick="beginExam()" data-i18n="btn_begin">Vizsga megkezdése →</button>
+        <button class="btn btn-secondary" onclick="go('login')" data-i18n="btn_back">Kilépés</button>
+        <button class="btn btn-primary" onclick="beginExam()" data-i18n="btn_begin">Bevezető lezárása</button>
       </div>
     </div>
   </div>
@@ -304,8 +304,8 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
   <div class="exam-foot">
     <div class="q-dots" id="q-dots"></div>
     <div style="display:flex;gap:.45rem">
-      <button class="btn btn-secondary btn-sm" id="btn-prev" onclick="prevQ()" data-i18n="btn_prev">← Előző</button>
-      <button class="btn btn-primary btn-sm" id="btn-next" onclick="nextQ()" data-i18n="btn_next">Következő →</button>
+      <button class="btn btn-secondary btn-sm" id="btn-prev" onclick="prevQ()" data-i18n="btn_prev">Előző</button>
+      <button class="btn btn-primary btn-sm" id="btn-next" onclick="nextQ()" data-i18n="btn_next">Következő</button>
     </div>
   </div>
 </div>
@@ -315,12 +315,12 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
   <div class="page">
     <div class="panel">
       <div class="panel-body" style="text-align:center;padding:3rem 2rem">
-        <div style="font-size:2.2rem;margin-bottom:1rem">🔒</div>
-        <h2 data-i18n="submitted_title">Vizsga beadva</h2>
-        <p style="color:var(--muted);max-width:380px;margin:.8rem auto;font-size:.9rem" data-i18n="submitted_msg">Válaszai rögzítve lettek. Az eredményeket az adminisztrátor teszi közzé. Amint elérhetővé válnak, az alábbi azonosítóval tekintheti meg őket.</p>
+        <div style="font-size:2.2rem;margin-bottom:1rem">✅</div>
+        <h2 data-i18n="submitted_title">Vizsga lezárva</h2>
+        <p style="color:var(--muted);max-width:380px;margin:.8rem auto;font-size:.9rem" data-i18n="submitted_msg">Válaszai rögzítve lettek. Az eredményeket vagy elektronikus úton, postai úton, vagy az alábbi azonosítóval ezen a felületen fogja megkapni.</p>
         <div style="font-family:'Courier New',monospace;background:var(--off);border:1px solid var(--rule);border-radius:var(--r);padding:.5rem 1.2rem;display:inline-block;font-size:.92rem;margin-top:.9rem" id="sub-ref">—</div>
         <div style="margin-top:2rem">
-          <button class="btn btn-secondary" onclick="go('welcome')" data-i18n="btn_home">← Főoldal</button>
+          <button class="btn btn-secondary" onclick="go('welcome')" data-i18n="btn_home">Főoldal</button>
         </div>
       </div>
     </div>
@@ -333,7 +333,7 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
     <div class="panel">
       <div class="panel-head">
         <h2 data-i18n="lookup_title">Eredmény lekérdezése</h2>
-        <p class="subtitle" data-i18n="lookup_sub">Adja meg azonosítóit a közzétett eredmény megtekintéséhez.</p>
+        <p class="subtitle" data-i18n="lookup_sub">Adja meg az azonosítópárt eredmény megtekintéséhez. Az eredményt bármennyiszer lekérdezheti.</p>
       </div>
       <div class="panel-body">
         <div class="field">
@@ -342,13 +342,13 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
         </div>
         <div class="field">
           <label data-i18n="examinee_id">Vizsgázói azonosító</label>
-          <input id="rl-eid" type="text" class="mono" placeholder="AA117NNNNNNNNNC" maxlength="15" oninput="this.value=this.value.toUpperCase();validateIdField(this)">
+          <input id="rl-eid" type="text" class="mono" placeholder="AE117831937731Z" maxlength="15" oninput="this.value=this.value.toUpperCase();validateIdField(this)">
         </div>
         <div id="rl-err" class="alert alert-danger" style="display:none;margin-top:.6rem"></div>
       </div>
       <div class="panel-foot">
-        <button class="btn btn-secondary" onclick="go('welcome')" data-i18n="btn_back">← Vissza</button>
-        <button class="btn btn-primary" onclick="lookupResult()" data-i18n="btn_lookup">Eredmény megtekintése →</button>
+        <button class="btn btn-secondary" onclick="go('welcome')" data-i18n="btn_back">Vissza</button>
+        <button class="btn btn-primary" onclick="lookupResult()" data-i18n="btn_lookup">Eredmény lekérdezése</button>
       </div>
     </div>
   </div>
@@ -366,7 +366,7 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
         <div class="score-block">
           <div>
             <div class="score-pts" id="rv-pts">0</div>
-            <div class="score-pts-lbl" data-i18n="competence_points">Kompetenciapontok</div>
+            <div class="score-pts-lbl" data-i18n="competence_points">Pontszám</div>
             <div class="band-bar" style="width:200px"><div class="band-fill" id="rv-band" style="width:0%"></div></div>
             <div style="font-size:.7rem;color:var(--muted)" data-i18n="out_of_2500">2500-ból</div>
           </div>
@@ -384,7 +384,7 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
         <div id="rv-review"></div>
       </div>
       <div class="panel-foot">
-        <button class="btn btn-secondary" onclick="go('welcome')" data-i18n="btn_home">← Főoldal</button>
+        <button class="btn btn-secondary" onclick="go('welcome')" data-i18n="btn_home">Főoldal</button>
       </div>
     </div>
   </div>
@@ -395,19 +395,19 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
   <div style="max-width:400px;width:100%;padding:1rem;margin:auto">
     <div class="panel">
       <div class="panel-head">
-        <h2 data-i18n="admin_login_title">Adminisztrátori hozzáférés</h2>
-        <p class="subtitle" data-i18n="admin_login_sub">Korlátozott hozzáférés — kizárólag jogosult személyek számára.</p>
+        <h2 data-i18n="admin_login_title">Vizsgáztatói hozzáférés</h2>
+        <p class="subtitle" data-i18n="admin_login_sub">Amennyiben vizsgát tölt ki, rossz helyen jár.</p>
       </div>
       <div class="panel-body">
         <div class="field">
-          <label data-i18n="admin_password">Adminisztrátori jelszó</label>
+          <label data-i18n="admin_password">Vizsgáztatói jelszó</label>
           <input id="admin-pw" type="password" onkeydown="if(event.key==='Enter')doAdminLogin()">
         </div>
         <div id="admin-login-err" class="alert alert-danger" style="display:none"></div>
       </div>
       <div class="panel-foot">
-        <button class="btn btn-secondary" onclick="go('welcome')" data-i18n="btn_back">← Vissza</button>
-        <button class="btn btn-primary" onclick="doAdminLogin()" data-i18n="btn_enter">Belépés →</button>
+        <button class="btn btn-secondary" onclick="go('welcome')" data-i18n="btn_back">Vissza</button>
+        <button class="btn btn-primary" onclick="doAdminLogin()" data-i18n="btn_enter">Belépés</button>
       </div>
     </div>
   </div>
@@ -417,7 +417,7 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
 <div id="screen-admin" class="screen">
   <div class="page-wide">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.4rem;flex-wrap:wrap;gap:.65rem">
-      <div><h2 data-i18n="admin_panel_title">Adminisztrátori panel</h2><p class="subtitle" data-i18n="admin_panel_sub">Vizsgák, feladatbank, eredmények és közzétételek kezelése.</p></div>
+      <div><h2 data-i18n="admin_panel_title">Vizsgáztatói panel</h2><p class="subtitle" data-i18n="admin_panel_sub">Vizsgák, feladatbank, eredmények és közzétételek kezelése.</p></div>
       <button class="btn btn-secondary btn-sm" onclick="go('welcome')" data-i18n="btn_exit">← Kilépés</button>
     </div>
 
@@ -744,7 +744,13 @@ async function doLogin() {
     document.getElementById('header-meta').textContent  = `${eid} · ${code}`;
     updateInstructionsList();
     go('instructions');
-  } catch(e) { showErr(errEl, e.message); }
+  } catch(e) {
+    let msg = e.message;
+    if (msg.includes('not recognised') || msg.includes('not found')) msg = t('err_no_exam');
+    else if (msg.includes('not registered')) msg = t('err_no_examinee');
+    else if (msg.includes('already submitted')) msg = t('err_already_submitted');
+    showErr(errEl, msg);
+  }
   finally { setBtnLoading('login-btn', false); }
 }
 
@@ -968,7 +974,12 @@ async function lookupResult() {
   errEl.style.display='none';
   if(!code||!eid){showErr(errEl,t('err_fill_required'));return;}
   try { await showResultFromAPI(code,eid); }
-  catch(e){ showErr(errEl, e.message); }
+  catch(e){
+    let msg = e.message;
+    if (msg.includes('not yet been released')) msg = t('err_not_released');
+    else if (msg.includes('No result')) msg = t('err_no_result');
+    showErr(errEl, msg);
+  }
 }
 
 async function showResultFromAPI(code,eid) {
@@ -1102,7 +1113,7 @@ async function adminCreateExam() {
     await apiPost('/api/admin/exams',{title,category:cat,code,timeMins,desc});
     ['ex-title','ex-cat','ex-code','ex-time','ex-desc'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
     await refreshAdminData();
-  } catch(e){ showErr(errEl,e.message); }
+  } catch(e){ showErr(errEl, e.message.includes('already exists') ? t('err_code_exists') : e.message); }
 }
 
 function renderExamList() {
@@ -1140,7 +1151,7 @@ async function adminAssignTask() {
     exam.taskIds.push(taskId);
     msgEl.className='alert alert-success';msgEl.style.display='flex';msgEl.textContent=t('success_task_assigned');
     renderExamList();
-  } catch(e){msgEl.className='alert alert-danger';msgEl.style.display='flex';msgEl.textContent=e.message;}
+  } catch(e){msgEl.className='alert alert-danger';msgEl.style.display='flex';msgEl.textContent=e.message.includes('already assigned')?t('task_already_assigned'):e.message;}
 }
 
 // ─── TASKS ───
@@ -1246,7 +1257,7 @@ async function adminRegisterExaminee(){
     document.getElementById('reg-eid').value='';
     msgEl.className='alert alert-success';msgEl.style.display='flex';msgEl.textContent=t('success_examinee_registered');
     loadExaminees();
-  } catch(e){msgEl.className='alert alert-danger';msgEl.style.display='flex';msgEl.textContent=e.message;}
+  } catch(e){msgEl.className='alert alert-danger';msgEl.style.display='flex';msgEl.textContent=e.message.includes('already registered')?t('err_already_registered'):e.message;}
 }
 
 async function loadExaminees(){
@@ -1982,7 +1993,7 @@ async function openManualGrade(examCode, examineeId) {
 
   const footer = document.createElement('div');
   footer.style.cssText = 'padding:1rem 1.5rem;border-top:1px solid var(--rule);display:flex;justify-content:flex-end;gap:.5rem';
-  footer.innerHTML = '<button class="btn btn-secondary" onclick="document.getElementById('manual-grade-modal').remove()">Mégse</button>';
+  footer.innerHTML = `<button class="btn btn-secondary" onclick="document.getElementById('manual-grade-modal').remove()">Mégse</button>`;
   const saveBtn = document.createElement('button');
   saveBtn.className = 'btn btn-primary';
   saveBtn.textContent = 'Mentés';

@@ -5,12 +5,17 @@ import { json, err, kvGet, kvSet, kvList, kvListAppend } from '../utils.js';
 // Score = (earned_weight / total_weight) × 2500
 const DIFF_WEIGHT = [0, 1, 1.5, 2.5, 4, 6.5, 10, 16];
 
-function computePoints(tasks, answers) {
+function computePoints(tasks, answers, manualGrades) {
   const totalWeight = tasks.reduce((s, t) => s + DIFF_WEIGHT[t.difficulty], 0);
   if (totalWeight === 0) return 0;
   let earned = 0;
   tasks.forEach((t, i) => {
-    if (checkCorrect(t, answers[i])) earned += DIFF_WEIGHT[t.difficulty];
+    if (['essay','fileupload'].includes(t.type)) {
+      const mg = manualGrades && manualGrades[t.id];
+      if (mg) earned += (mg.points / 100) * DIFF_WEIGHT[t.difficulty];
+    } else if (checkCorrect(t, answers[i])) {
+      earned += DIFF_WEIGHT[t.difficulty];
+    }
   });
   return Math.round((earned / totalWeight) * 2500);
 }
@@ -18,24 +23,28 @@ function computePoints(tasks, answers) {
 function checkCorrect(task, ans) {
   if (ans === undefined || ans === null || ans === '') return false;
   switch (task.type) {
-    case 'mc':
-      return Number(ans) === task.correctIdx;
+    case 'mc':        return Number(ans) === task.correctIdx;
+    case 'truefalse': return String(ans) === String(task.correctAnswer);
     case 'text': {
       const a = (ans + '').toLowerCase();
       return task.keywords.some(k => a.includes(k.toLowerCase().trim()));
     }
-    case 'order':
-      // ans is an array of indices representing the submitted order
-      return Array.isArray(ans) &&
-        ans.length === task.items.length &&
-        ans.every((v, i) => Number(v) === i);
-    case 'match': {
-      // ans is { left: right, … }
-      if (typeof ans !== 'object') return false;
-      return task.pairs.every(([l, r]) => (ans[l] || '').trim() === r.trim());
+    case 'numeric': {
+      const n = Number(ans);
+      if (isNaN(n)) return false;
+      if (task.useTolerance) return Math.abs(n - task.correctNumber) <= task.tolerance;
+      return n === task.correctNumber;
     }
-    default:
-      return false;
+    case 'order':
+      return Array.isArray(ans) && ans.length === task.items.length && ans.every((v,i) => Number(v) === i);
+    case 'match': {
+      if (typeof ans !== 'object') return false;
+      return task.pairs.every(([l,r]) => (ans[l]||'').trim() === r.trim());
+    }
+    case 'essay':
+    case 'fileupload':
+      return false; // manually graded
+    default: return false;
   }
 }
 
@@ -65,7 +74,7 @@ export async function submit(request, env) {
 
   const tasks = (await Promise.all(exam.taskIds.map(id => kvGet(env, `task:${id}`)))).filter(Boolean);
 
-  const points  = computePoints(tasks, answers);
+  const points  = computePoints(tasks, answers, {});
   let   correct = 0;
   tasks.forEach((t, i) => { if (checkCorrect(t, answers[i])) correct++; });
 
@@ -104,22 +113,29 @@ export async function getForExaminee(request, env) {
 
   // Build per-question review (include correct answers now that it's released)
   const review = tasks.map((t, i) => ({
-    question:  t.text,
-    type:      t.type,
+    name:       t.name || '',
+    question:   t.text,
+    type:       t.type,
     difficulty: t.difficulty,
-    correct:   checkCorrect(t, record.answers[i]),
+    correct:    checkCorrect(t, record.answers[i]),
     yourAnswer: record.answers[i],
     correctAnswer: correctAnsStr(t),
+    manualGrade: record.manualGrades?.[t.id] || null,
+    needsManualGrade: ['essay','fileupload'].includes(t.type) && !record.manualGrades?.[t.id],
   }));
 
   return json({ ...record, review, examTitle: exam?.title });
 }
 
 function correctAnsStr(t) {
-  if (t.type === 'mc')    return t.options[t.correctIdx];
-  if (t.type === 'text')  return t.keywords.join(', ');
-  if (t.type === 'order') return t.items.join(' → ');
-  if (t.type === 'match') return t.pairs.map(([l,r]) => `${l} → ${r}`).join('; ');
+  if (t.type === 'mc')         return t.options[t.correctIdx];
+  if (t.type === 'truefalse')  return t.correctAnswer ? 'Igaz' : 'Hamis';
+  if (t.type === 'text')       return t.keywords.join(', ');
+  if (t.type === 'numeric')    return t.useTolerance ? `${t.correctNumber} (±${t.tolerance})` : String(t.correctNumber);
+  if (t.type === 'order')      return t.items.join(' → ');
+  if (t.type === 'match')      return t.pairs.map(([l,r]) => `${l} → ${r}`).join('; ');
+  if (t.type === 'essay')      return '(manuális értékelés)';
+  if (t.type === 'fileupload') return '(feltöltött fájl)';
   return '—';
 }
 

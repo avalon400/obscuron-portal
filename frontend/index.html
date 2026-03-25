@@ -188,7 +188,7 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
 </head>
 <body>
 
-<!-- ═══ SITE HEADER ═══ -->
+<<!-- ═══ SITE HEADER ═══ -->
 <div class="site-header">
   <div class="site-logo">
     <div class="crest">OVP</div>
@@ -206,7 +206,7 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
 <!-- ═══════════ WELCOME ═══════════ -->
 <div id="screen-welcome" class="screen active">
   <div class="welcome-inner">
-    <div class="welcome-icon">OVP</div>
+    <div class="welcome-icon"></div>
     <h1 data-i18n="welcome_title">Obscuron Vizsgaportál</h1>
     <p class="subtitle" style="font-size:.95rem;margin-top:.4rem" data-i18n="welcome_sub">Az Obscuron Vizsgaportál korszerű megoldásokat kínál fejlődő szervezetek számára.</p>
     <p style="color:var(--muted);margin-top:1rem;font-size:.9rem;line-height:1.6" data-i18n="welcome_desc">Adja meg vizsgázói kódját a vizsga megkezdéséhez, vagy lépjen be a vizsgáztatói felületre.</p>
@@ -417,7 +417,7 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
 <div id="screen-admin" class="screen">
   <div class="page-wide">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.4rem;flex-wrap:wrap;gap:.65rem">
-      <div><h2 data-i18n="admin_panel_title">Vizsgáztatói panel</h2><p class="subtitle" data-i18n="admin_panel_sub">Vizsgák, feladatbank, eredmények és közzétételek kezelése.</p></div>
+      <div><h2 data-i18n="admin_panel_title">Adminisztrátori panel</h2><p class="subtitle" data-i18n="admin_panel_sub">Vizsgák, feladatbank, eredmények és közzétételek kezelése.</p></div>
       <button class="btn btn-secondary btn-sm" onclick="go('welcome')" data-i18n="btn_exit">← Kilépés</button>
     </div>
 
@@ -427,6 +427,7 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
       <button class="tab-btn" onclick="switchTab('tab-examinees',this)" data-i18n="tab_examinees">Vizsgázók</button>
       <button class="tab-btn" onclick="switchTab('tab-results',this)" data-i18n="tab_results">Eredmények</button>
       <button class="tab-btn" onclick="switchTab('tab-publish',this)" data-i18n="tab_publish">Közzététel</button>
+      <button class="tab-btn" onclick="switchTab('tab-settings',this)">⚙ Beállítások</button>
     </div>
 
     <!-- TAB: EXAMS -->
@@ -607,6 +608,32 @@ code{font-family:'Courier New',monospace;font-size:.88em;background:var(--off);p
     </div>
 
     <!-- TAB: PUBLISH -->
+    <!-- TAB: SETTINGS -->
+    <div id="tab-settings" class="tab-panel">
+      <div class="two-col">
+        <div class="panel">
+          <div class="panel-head"><h3>Logó beállítása</h3></div>
+          <div class="panel-body">
+            <div class="field"><label>Logó feltöltése (PNG/JPG, max 200KB)</label><input type="file" id="logo-upload" accept="image/*" style="font-size:.85rem"></div>
+            <div id="logo-preview" style="margin-top:.8rem"></div>
+            <div id="logo-msg" style="display:none;margin-top:.5rem"></div>
+          </div>
+          <div class="panel-foot" style="gap:.5rem">
+            <button class="btn btn-primary" onclick="saveLogo()">Logó mentése</button>
+            <button class="btn btn-secondary" onclick="deleteLogo()">Logó törlése</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Digitális aláírás</h3></div>
+          <div class="panel-body">
+            <p style="font-size:.88rem;color:var(--mid);line-height:1.6">Az aláírási tanúsítvány a Worker titkos kulcsaiban (<code>SIGN_CERT</code> és <code>SIGN_KEY</code>) tárolódik. A beállításhoz futtassa a mellékelt <code>generate-cert.js</code> scriptet, majd töltse fel a Worker secretjeibe.</p>
+            <div id="sign-status" style="margin-top:.8rem"></div>
+          </div>
+          <div class="panel-foot"><button class="btn btn-secondary" onclick="checkSignStatus()">Aláírás állapot ellenőrzése</button></div>
+        </div>
+      </div>
+    </div>
+
     <div id="tab-publish" class="tab-panel">
       <div class="panel">
         <div class="panel-head"><h3 data-i18n="publish_results">Eredmények közzététele</h3></div>
@@ -691,6 +718,7 @@ async function apiDelete(path)    { return apiFetch(path, { method:'DELETE' }); 
 let session = { examCode:null, examineeId:null, tasks:[], answers:{}, currentQ:0, timerInt:null, timeLeft:0, timeUsed:0 };
 let cachedExams = [], cachedTasks = [];
 let mcOpts = [];
+let cachedLogo = null;
 
 // ═══════════════════════════════════════════════════════════════
 //  NAV
@@ -2115,10 +2143,60 @@ async function printNotification(examCode, examineeId) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+//  LOGO MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+async function loadLogo() {
+  try {
+    const res = await apiGet('/api/admin/settings/logo');
+    if (res && res.logo) {
+      cachedLogo = res.logo;
+      const prev = document.getElementById('logo-preview');
+      if (prev) prev.innerHTML = `<img src="${res.logo}" style="max-height:80px;max-width:200px;border-radius:var(--r);border:1px solid var(--rule)">`;
+    }
+  } catch(e) { /* no logo set yet */ }
+}
+
+async function saveLogo() {
+  const file = document.getElementById('logo-upload')?.files?.[0];
+  const msgEl = document.getElementById('logo-msg');
+  msgEl.style.display = 'none';
+  if (!file) { msgEl.className='alert alert-danger'; msgEl.style.display='flex'; msgEl.textContent='Kérjük, válasszon képet.'; return; }
+  if (file.size > 200*1024) { msgEl.className='alert alert-danger'; msgEl.style.display='flex'; msgEl.textContent='A logó mérete max. 200KB lehet.'; return; }
+  const b64 = await fileToBase64(file);
+  try {
+    await apiPost('/api/admin/settings/logo', { logo: b64 });
+    cachedLogo = b64;
+    msgEl.className='alert alert-success'; msgEl.style.display='flex'; msgEl.textContent='Logó sikeresen mentve.';
+  } catch(e) { msgEl.className='alert alert-danger'; msgEl.style.display='flex'; msgEl.textContent=e.message; }
+}
+
+async function deleteLogo() {
+  if (!confirm('Biztosan törli a logót?')) return;
+  try {
+    await apiDelete('/api/admin/settings/logo');
+    cachedLogo = null;
+    document.getElementById('logo-preview').innerHTML = '';
+    const msgEl = document.getElementById('logo-msg');
+    msgEl.className='alert alert-success'; msgEl.style.display='flex'; msgEl.textContent='Logó törölve.';
+  } catch(e) { alert(e.message); }
+}
+
+async function checkSignStatus() {
+  const el = document.getElementById('sign-status');
+  try {
+    const res = await apiGet('/api/admin/settings/signstatus');
+    el.innerHTML = res.available
+      ? '<span class="badge badge-green">✓ Aláírás konfigurálva</span>'
+      : '<span class="badge badge-grey">✗ Nincs aláírás beállítva</span>';
+  } catch(e) { el.innerHTML = '<span class="badge badge-grey">✗ Nem elérhető</span>'; }
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════════════
 initMcOpts();
 setLang('hu');
+loadLogo();
 </script>
 </body>
 </html>

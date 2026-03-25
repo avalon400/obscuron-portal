@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OVP Obscuron Vizsgaportál</title>
+<title>Obscuron Vizsgaportál</title>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -674,7 +674,7 @@ function setLang(lang) {
   document.getElementById('lang-hu').classList.toggle('active', lang==='hu');
   document.getElementById('lang-en').classList.toggle('active', lang==='en');
   document.documentElement.lang = lang;
-  document.title = lang === 'hu' ? 'KompetenciaKapu' : 'CompetenceGate';
+  document.title = lang === 'hu' ? 'Obscuron Vizsgaportál' : 'Obscuron Portal';
   applyTranslations();
   updateInstructionsList();
 }
@@ -718,6 +718,9 @@ async function apiDelete(path)    { return apiFetch(path, { method:'DELETE' }); 
 let session = { examCode:null, examineeId:null, tasks:[], answers:{}, currentQ:0, timerInt:null, timeLeft:0, timeUsed:0 };
 let cachedExams = [], cachedTasks = [];
 let mcOpts = [];
+// To use a static logo without KV, replace null with a base64 data URL:
+// let cachedLogo = 'data:image/png;base64,YOUR_BASE64_HERE';
+// Otherwise the logo is loaded from KV via the Settings tab.
 let cachedLogo = null;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1556,7 +1559,7 @@ async function exportResultsPDF() {
   doc.setTextColor(150);
   doc.text(`${records.length} rekord`, 14, y + 10);
 
-  doc.save(`obscuron-eredmenyek-${new Date().toISOString().slice(0,10)}.pdf`);
+  await signAndSavePDF(doc, `obscuron-eredmenyek-${new Date().toISOString().slice(0,10)}.pdf`);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1879,7 +1882,7 @@ async function exportExamineesPDF() {
   doc.setTextColor(150);
   doc.text(`${rows.length} vizsgazo`, 14, y + 10);
 
-  doc.save(`obscuron-vizsgazok-${examCode}-${new Date().toISOString().slice(0,10)}.pdf`);
+  await signAndSavePDF(doc, `obscuron-vizsgazok-${examCode}-${new Date().toISOString().slice(0,10)}.pdf`);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2189,6 +2192,26 @@ async function checkSignStatus() {
       ? '<span class="badge badge-green">✓ Aláírás konfigurálva</span>'
       : '<span class="badge badge-grey">✗ Nincs aláírás beállítva</span>';
   } catch(e) { el.innerHTML = '<span class="badge badge-grey">✗ Nem elérhető</span>'; }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PDF SIGNING
+// ═══════════════════════════════════════════════════════════════
+async function signAndSavePDF(doc, filename) {
+  const pdfB64 = doc.output('datauristring');
+  try {
+    const res = await apiPost('/api/admin/sign', { data: pdfB64, filename });
+    if (res && res.signature) {
+      const pageCount = doc.getNumberOfPages();
+      doc.setPage(pageCount);
+      doc.setFontSize(7);
+      doc.setTextColor(100);
+      doc.text('Digitálisan aláírva — Obscuron Vizsgaportál', 14, 290);
+      doc.text('Aláírás: ' + res.signature.substring(0, 32) + '...', 14, 294);
+      if (cachedLogo) { try { doc.addImage(cachedLogo,'PNG',170,282,25,12); } catch(e){} }
+    }
+  } catch(e) { console.warn('Signing unavailable, saving without signature:', e.message); }
+  doc.save(filename);
 }
 
 // ═══════════════════════════════════════════════════════════════

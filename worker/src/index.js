@@ -95,6 +95,30 @@ export default {
           const available = !!(env.SIGN_CERT && env.SIGN_KEY);
           return handleCORS(json({ available }));
         }
+        if (path === '/api/admin/sign' && method === 'POST') {
+          if (!env.SIGN_CERT || !env.SIGN_KEY) return handleCORS(err(503, 'Signing not configured.'));
+          try {
+            const { data, filename } = await request.json();
+            if (!data) return handleCORS(err(400, 'data required'));
+            const pemToDer = pem => {
+              const b64 = pem.replace(/-----[^-]+-----/g,'').replace(/\s/g,'');
+              const bin = atob(b64);
+              return Uint8Array.from(bin, c => c.charCodeAt(0));
+            };
+            const keyDer = pemToDer(env.SIGN_KEY);
+            const privateKey = await crypto.subtle.importKey(
+              'pkcs8', keyDer,
+              { name:'RSASSA-PKCS1-v1_5', hash:'SHA-256' },
+              false, ['sign']
+            );
+            const dataBytes = Uint8Array.from(atob(data.split(',')[1] || data), c=>c.charCodeAt(0));
+            const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', privateKey, dataBytes);
+            const sigB64 = btoa(String.fromCharCode(...new Uint8Array(sig)));
+            return handleCORS(json({ signature: sigB64, cert: env.SIGN_CERT, filename }));
+          } catch(e) {
+            return handleCORS(err(500, 'Signing failed: ' + e.message));
+          }
+        }
 
         return handleCORS(err(404, 'Route not found'));
       }

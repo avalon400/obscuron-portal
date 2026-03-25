@@ -76,6 +76,26 @@ export default {
         if (path === '/api/admin/results'       && method === 'GET')  return handleCORS(await resultRoutes.listAll(request, env));
         if (path === '/api/admin/results/publish' && method === 'POST') return handleCORS(await resultRoutes.publish(request, env));
 
+        // Settings — logo & signing
+        if (path === '/api/admin/settings/logo' && method === 'GET') {
+          const logo = await env.CG_KV.get('settings:logo');
+          return handleCORS(json({ logo: logo || null }));
+        }
+        if (path === '/api/admin/settings/logo' && method === 'POST') {
+          const { logo } = await request.json();
+          if (!logo) return handleCORS(err(400, 'logo required'));
+          await env.CG_KV.put('settings:logo', logo);
+          return handleCORS(json({ ok: true }));
+        }
+        if (path === '/api/admin/settings/logo' && method === 'DELETE') {
+          await env.CG_KV.delete('settings:logo');
+          return handleCORS(json({ ok: true }));
+        }
+        if (path === '/api/admin/settings/signstatus' && method === 'GET') {
+          const available = !!(env.SIGN_CERT && env.SIGN_KEY);
+          return handleCORS(json({ available }));
+        }
+
         return handleCORS(err(404, 'Route not found'));
       }
 

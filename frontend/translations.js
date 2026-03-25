@@ -23,12 +23,12 @@ const T = {
     site_title:               'Obscuron Vizsgaportál',
 
     // Welcome screen
-    welcome_title:            '',
+    welcome_title:            'OVP',
     welcome_sub:              'Obscuron Vizsgaportál',
-    welcome_desc:             'Adja meg vizsgaazonosítóját a vizsga megkezdéséhez, vagy lépjen be a tanári felületre.',
+    welcome_desc:             'Adja meg vizsgaazonosítóját a vizsga megkezdéséhez, vagy lépjen be a vizsgáztatói felületre.',
     btn_start_exam:           'Kitöltés megkezdése',
     btn_view_result:          'Eredmény lekérdezése',
-    btn_admin:                'Vizsgabizottsági felület',
+    btn_admin:                'Vizsgáztatói felület',
 
     // Login screen
     login_title:              'Vizsgázó azonosítása',

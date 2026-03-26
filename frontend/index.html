@@ -1026,8 +1026,8 @@ function renderResultView(rec) {
   document.getElementById('rv-time').textContent=fmtTime(rec.timeUsed);
   const grade=pointsToGrade(rec.points);
   const badge=document.getElementById('rv-grade-badge');
-  badge.textContent=t(grade.labelKey);badge.className='badge '+grade.cls;
-  document.getElementById('rv-grade').textContent=t(grade.labelKey);
+  badge.textContent=grade.code+' '+t(grade.labelKey);badge.className='badge '+grade.cls;
+  document.getElementById('rv-grade').textContent=grade.code+' — '+t(grade.labelKey);
   document.getElementById('rv-msg').textContent=t(grade.msgKey);
   setTimeout(()=>{document.getElementById('rv-band').style.width=Math.round(rec.points/2500*100)+'%';},80);
 
@@ -1087,11 +1087,17 @@ function renderResultView(rec) {
 }
 
 function pointsToGrade(pts) {
-  if(pts>=2200) return {labelKey:'grade_outstanding',msgKey:'msg_outstanding',cls:'badge-green'};
-  if(pts>=1700) return {labelKey:'grade_excellent',  msgKey:'msg_excellent',  cls:'badge-green'};
-  if(pts>=1200) return {labelKey:'grade_proficient', msgKey:'msg_proficient', cls:'badge-blue'};
-  if(pts>=700)  return {labelKey:'grade_developing', msgKey:'msg_developing', cls:'badge-yellow'};
-  return {labelKey:'grade_beginning',msgKey:'msg_beginning',cls:'badge-red'};
+  const pct = pts / 2500 * 100;
+  if (pct >= 96) return {labelKey:'grade_7c', msgKey:'msg_7c', cls:'badge-green',  code:'L7C'};
+  if (pct >= 92) return {labelKey:'grade_7b', msgKey:'msg_7b', cls:'badge-green',  code:'L7B'};
+  if (pct >= 88) return {labelKey:'grade_7a', msgKey:'msg_7a', cls:'badge-green',  code:'L7A'};
+  if (pct >= 73) return {labelKey:'grade_6',  msgKey:'msg_6',  cls:'badge-green',  code:'L6'};
+  if (pct >= 67) return {labelKey:'grade_5',  msgKey:'msg_5',  cls:'badge-blue',   code:'L5'};
+  if (pct >= 60) return {labelKey:'grade_4',  msgKey:'msg_4',  cls:'badge-blue',   code:'L4'};
+  if (pct >= 56) return {labelKey:'grade_3',  msgKey:'msg_3',  cls:'badge-yellow', code:'L3'};
+  if (pct >= 53) return {labelKey:'grade_2',  msgKey:'msg_2',  cls:'badge-yellow', code:'L2'};
+  if (pct >= 45) return {labelKey:'grade_1',  msgKey:'msg_1',  cls:'badge-red',    code:'L1'};
+  return          {labelKey:'grade_0',  msgKey:'msg_0',  cls:'badge-grey',   code:'LX'};
 }
 
 function formatAnsDisplay(ans) {
@@ -1439,11 +1445,8 @@ function validateExamineeId(id) {
 // ═══════════════════════════════════════════════════════════════
 
 function getGradeLabel(points) {
-  if (points >= 2200) return t('grade_outstanding');
-  if (points >= 1800) return t('grade_excellent');
-  if (points >= 1400) return t('grade_proficient');
-  if (points >= 900)  return t('grade_developing');
-  return t('grade_beginning');
+  const g = pointsToGrade(points);
+  return g.code + ' — ' + t(g.labelKey);
 }
 
 function formatTime(seconds) {
@@ -2054,8 +2057,7 @@ async function printNotification(examCode, examineeId) {
 
   const exam = cachedExams.find(e=>e.code===examCode);
   const grade = pointsToGrade(record.points);
-  const gradeLabels = {grade_outstanding:'Kiváló',grade_excellent:'Jeles',grade_proficient:'Jó',grade_developing:'Közepes',grade_beginning:'Kezdő'};
-  const gradeLabel = gradeLabels[grade.labelKey] || '—';
+  const gradeLabel = (grade.code || '') + ' — ' + t(grade.labelKey);
   const logo = cachedLogo ? `<img src="${cachedLogo}" style="height:52px">` : '<div style="width:52px;height:52px;border:2px solid #1b4f8a;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#1b4f8a;font-weight:bold;font-size:1.1rem">OVP</div>';
   const pct = Math.round(record.points/2500*100);
   const today = new Date().toLocaleDateString('hu-HU',{year:'numeric',month:'long',day:'numeric'});

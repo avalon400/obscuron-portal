@@ -1252,14 +1252,40 @@ async function adminAddTask(){
     const pairs=lines.map(l=>l.split('|').map(s=>s.trim()));
     if(pairs.length<2||pairs.some(p=>p.length<2)){showErr(errEl,t('err_match_pairs'));return;}
     body.pairs=pairs;
+  } else if(type==='truefalse'){
+    const sel=document.querySelector('input[name="tf-correct"]:checked');
+    body.correctAnswer = sel ? sel.value === 'true' : true;
+  } else if(type==='essay'){
+    body.maxWords = parseInt(document.getElementById('task-essay-maxwords').value)||0;
+  } else if(type==='numeric'){
+    const correct=parseFloat(document.getElementById('task-numeric-correct').value);
+    if(isNaN(correct)){showErr(errEl,'Adjon meg egy helyes számot.');return;}
+    const mode=document.getElementById('task-numeric-mode').value;
+    body.correctNumber=correct;
+    body.useTolerance=mode==='tolerance';
+    body.tolerance=mode==='tolerance'?parseFloat(document.getElementById('task-numeric-tolerance').value)||0:0;
+  } else if(type==='fileupload'){
+    body.allowedTypes=v('task-file-types').split(',').map(s=>s.trim()).filter(Boolean);
   }
+  const imgFile = document.getElementById('task-image')?.files?.[0];
+  if (imgFile) {
+    if (imgFile.size > 300*1024) { showErr(errEl,'A kép mérete max. 300KB lehet.'); return; }
+    body.image = await fileToBase64(imgFile);
+  }
+  const taskName = v('task-name');
+  if (taskName) body.name = taskName;
   try {
     const task=await apiPost('/api/admin/tasks',body);
     cachedTasks.push(task);
     clearTaskText();
+    document.getElementById('task-name').value='';
+    document.getElementById('task-image').value='';
+    document.getElementById('task-image-preview').innerHTML='';
     if(type==='text') document.getElementById('task-text-ans').value='';
     if(type==='order') document.getElementById('task-order-items').value='';
     if(type==='match') document.getElementById('task-match-pairs').value='';
+    if(type==='numeric') document.getElementById('task-numeric-correct').value='';
+    if(type==='essay') document.getElementById('task-essay-maxwords').value='0';
     initMcOpts();
     renderTaskBank();populateExamSelects();
   } catch(e){showErr(errEl,e.message);}
